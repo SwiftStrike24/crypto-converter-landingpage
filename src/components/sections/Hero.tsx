@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { getCryptoPrices, CryptoPrice, formatCurrency, FEATURED_CRYPTOS, CRYPTO_METADATA } from '@/lib/api';
 import { motion } from 'framer-motion';
 import ClientOnly from '@/components/ClientOnly';
+import ConverterDemo from '@/components/demo/ConverterDemo';
 
 // Floating crypto coin component with physics-based animation
 const FloatingCryptoIcon = ({
@@ -397,9 +398,9 @@ export default function Hero() {
                   <div className="text-text-secondary text-xs font-medium ml-2">Crypto Converter</div>
                 </div>
 
-                {/* App screenshot - use a placeholder color instead of missing image */}
-                <div className="relative aspect-[16/10] w-full bg-background-darker flex items-center justify-center">
-                  <div className="text-text-secondary">App Preview</div>
+                {/* Replace placeholder with ConverterDemo component */}
+                <div className="w-full bg-background-darker p-4">
+                  <ConverterDemo />
                 </div>
               </div>
 

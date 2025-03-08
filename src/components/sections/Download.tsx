@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import ConverterDemo from '@/components/demo/ConverterDemo';
 
 // Platform data
 const platforms = [
@@ -95,32 +96,16 @@ export default function Download() {
                   <div className="text-text-secondary text-xs font-medium ml-2">Crypto Converter</div>
                 </div>
                 
-                {/* App screenshot */}
-                <div className="relative aspect-video w-full bg-background-darker flex items-center justify-center">
-                  <div className="text-text-secondary text-lg">App Preview</div>
+                {/* Replace static app preview with interactive ConverterDemo */}
+                <div className="w-full bg-background-darker p-4">
+                  <ConverterDemo />
                 </div>
               </div>
-              
-              {/* Floating elements */}
-              <motion.div 
-                className="absolute -top-6 -right-6 bg-primary/10 backdrop-blur-md border border-primary/20 px-4 py-2 rounded-xl text-sm font-medium"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.3 }}
-              >
-                <span className="text-primary">Real-time updates</span>
-              </motion.div>
-              
-              <motion.div 
-                className="absolute -bottom-6 -left-6 bg-secondary/10 backdrop-blur-md border border-secondary/20 px-4 py-2 rounded-xl text-sm font-medium"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: 0.4 }}
-              >
-                <span className="text-secondary">50+ cryptocurrencies</span>
-              </motion.div>
+
+              {/* Floating badge */}
+              <div className="absolute -bottom-4 -right-4 bg-gradient-to-r from-purple-900 to-indigo-900 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-purple-500/30 backdrop-blur-sm">
+                Try it now!
+              </div>
             </div>
           </motion.div>
           

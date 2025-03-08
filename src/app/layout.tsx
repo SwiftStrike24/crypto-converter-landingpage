@@ -28,9 +28,9 @@ export const metadata: Metadata = {
     siteName: "Crypto Converter",
     images: [
       {
-        url: "/images/og-image.jpg",
+        url: "/images/logo.png",
         width: 1200,
-        height: 630,
+        height: 1200,
         alt: "Crypto Converter App",
       },
     ],
@@ -39,7 +39,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Crypto Converter | Real-Time Cryptocurrency Conversion",
     description: "A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking.",
-    images: ["/images/twitter-image.jpg"],
+    images: ["/images/logo.png"],
   },
 };
 
@@ -52,6 +52,7 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
+        suppressHydrationWarning
       >
         <Providers>{children}</Providers>
       </body>

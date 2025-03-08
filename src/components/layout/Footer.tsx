@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { getCurrentYear } from '@/lib/utils';
 import { motion } from 'framer-motion';
+import Image from 'next/image';
 
 // Footer links - simplified to only Product section
 const footerLinks = [
@@ -98,9 +99,19 @@ export default function Footer() {
             className="flex flex-col gap-2"
             variants={itemVariants}
           >
-            <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">
-              CryptoConverter
-            </span>
+            <div className="flex items-center gap-2">
+              <div className="relative w-8 h-8">
+                <Image
+                  src="/images/logo.png"
+                  alt="Crypto Converter Logo"
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">
+                CryptoConverter
+              </span>
+            </div>
             <span className="text-text-secondary text-sm">
               © {getCurrentYear()} All rights reserved.
             </span>

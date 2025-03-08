@@ -1,200 +1,189 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
+import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
+import { motion, AnimatePresence } from 'framer-motion';
+import { ChevronRight, ChevronLeft, Download, RefreshCw, BarChart3, Wallet } from 'lucide-react';
+import React from 'react';
 
-// Steps data
+// Steps data with icons
 const steps = [
   {
     id: 'install',
     title: 'Install the App',
     description: 'Download and install Crypto Converter on your preferred platform (Windows, macOS, or Linux).',
-    image: '/images/how-it-works/install.png',
+    color: 'from-blue-500 to-blue-600',
+    icon: Download,
   },
   {
     id: 'select',
     title: 'Select Cryptocurrencies',
     description: 'Choose from 50+ cryptocurrencies to convert between. Add your favorites for quick access.',
-    image: '/images/how-it-works/select.png',
+    color: 'from-purple-500 to-purple-600',
+    icon: Wallet,
   },
   {
     id: 'convert',
     title: 'Convert Instantly',
     description: 'Enter the amount and get real-time conversion rates with up-to-the-second accuracy.',
-    image: '/images/how-it-works/convert.png',
+    color: 'from-green-500 to-green-600',
+    icon: RefreshCw,
   },
   {
     id: 'track',
-    title: 'Track Your Portfolio',
-    description: 'Add your holdings to track your portfolio value in real-time with detailed analytics.',
-    image: '/images/how-it-works/track.png',
+    title: 'Crypto Chart',
+    description: 'View detailed price charts and historical data for any cryptocurrency with customizable timeframes.',
+    color: 'from-orange-500 to-orange-600',
+    icon: BarChart3,
   },
 ];
 
 export default function HowItWorks() {
-  const [activeStep, setActiveStep] = useState(steps[0].id);
-  const [isInView, setIsInView] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
+  const [activeStep, setActiveStep] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
   
-  // Intersection Observer to trigger animations when section is in view
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true);
-        }
-      },
-      { threshold: 0.2 }
-    );
-    
-    if (sectionRef.current) {
-      observer.observe(sectionRef.current);
-    }
-    
-    return () => {
-      if (sectionRef.current) {
-        observer.unobserve(sectionRef.current);
-      }
-    };
-  }, []);
+  const nextStep = () => {
+    setActiveStep((prev) => (prev + 1) % steps.length);
+  };
   
-  // Auto-advance steps
-  useEffect(() => {
-    if (!isInView) return;
-    
-    const interval = setInterval(() => {
-      const currentIndex = steps.findIndex(step => step.id === activeStep);
-      const nextIndex = (currentIndex + 1) % steps.length;
-      setActiveStep(steps[nextIndex].id);
-    }, 5000);
-    
-    return () => clearInterval(interval);
-  }, [activeStep, isInView]);
-  
+  const prevStep = () => {
+    setActiveStep((prev) => (prev - 1 + steps.length) % steps.length);
+  };
+
   return (
     <section 
       id="how-it-works" 
-      ref={sectionRef}
-      className="py-20 bg-background-darker relative overflow-hidden"
+      className="py-16 bg-background-darker relative overflow-hidden"
     >
       {/* Background elements */}
+      <div className="absolute inset-0 bg-noise opacity-5"></div>
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      <div className="absolute top-1/3 left-1/4 w-72 h-72 bg-primary/10 rounded-full blur-[120px] -z-10"></div>
       
       <div className="container mx-auto px-4">
-        {/* Section header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
+        <motion.div 
+          className="text-center mb-10"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-primary">
-            How Crypto Converter Works
+            How It Works
           </h2>
-          <p className="text-text-secondary text-lg">
-            Get started in minutes with our simple, intuitive workflow.
+          <p className="text-text-secondary max-w-2xl mx-auto">
+            Get started with Crypto Converter in just a few simple steps
           </p>
-        </div>
+        </motion.div>
         
-        {/* Steps timeline */}
-        <div className="flex flex-col md:flex-row gap-8 mb-16">
-          <div className="w-full md:w-1/3 space-y-6">
+        <div ref={containerRef} className="relative max-w-5xl mx-auto">
+          {/* Step indicators */}
+          <div className="flex justify-center mb-8 gap-2">
             {steps.map((step, index) => (
-              <div
+              <button
                 key={step.id}
+                onClick={() => setActiveStep(index)}
                 className={cn(
-                  "relative pl-12 py-4 cursor-pointer transition-all duration-300",
-                  "border-l-2 border-gray-700",
-                  activeStep === step.id ? "border-l-primary" : ""
+                  "w-2 h-2 rounded-full transition-all duration-300",
+                  activeStep === index 
+                    ? "w-8 bg-primary" 
+                    : "bg-gray-700 hover:bg-gray-600"
                 )}
-                onClick={() => setActiveStep(step.id)}
-              >
-                {/* Step number */}
-                <div className={cn(
-                  "absolute left-[-18px] top-4 w-9 h-9 rounded-full flex items-center justify-center",
-                  "border-2 transition-colors duration-300",
-                  activeStep === step.id 
-                    ? "border-primary bg-primary/20 text-primary" 
-                    : "border-gray-700 bg-background-darker text-text-secondary"
-                )}>
-                  {index + 1}
-                </div>
-                
-                <h3 className={cn(
-                  "text-xl font-semibold mb-2 transition-colors duration-300",
-                  activeStep === step.id ? "text-primary" : "text-text-primary"
-                )}>
-                  {step.title}
-                </h3>
-                <p className="text-text-secondary text-sm">
-                  {step.description}
-                </p>
-              </div>
+                aria-label={`Go to step ${index + 1}: ${step.title}`}
+              />
             ))}
           </div>
           
-          {/* Step visualization */}
-          <div className="w-full md:w-2/3 bg-background rounded-2xl p-6 border border-gray-800 relative h-[400px] md:h-auto">
-            {steps.map((step) => (
-              <div
-                key={step.id}
-                className={cn(
-                  "absolute inset-0 transition-all duration-500 p-6",
-                  activeStep === step.id 
-                    ? "opacity-100 transform-none" 
-                    : "opacity-0 translate-x-8"
-                )}
-                style={{ 
-                  zIndex: activeStep === step.id ? 10 : 0,
-                  pointerEvents: activeStep === step.id ? 'auto' : 'none'
-                }}
-              >
-                <div className="relative w-full h-full rounded-xl overflow-hidden border border-gray-800">
-                  <Image
-                    src={step.image}
-                    alt={step.title}
-                    fill
-                    className="object-cover"
-                  />
-                  
-                  {/* Step indicator */}
-                  <div className="absolute bottom-4 right-4 bg-background-darker/80 backdrop-blur-sm px-4 py-2 rounded-full">
-                    <span className="text-primary font-medium">Step {steps.findIndex(s => s.id === step.id) + 1}</span>
-                  </div>
-                </div>
-              </div>
-            ))}
+          {/* Main content area */}
+          <div className="relative bg-background-card/30 backdrop-blur-sm rounded-xl border border-gray-800/30 p-6 md:p-8 overflow-hidden">
+            {/* Navigation buttons */}
+            <button 
+              onClick={prevStep}
+              className="absolute left-2 top-1/2 -translate-y-1/2 z-10 bg-background-card/80 hover:bg-background-card p-2 rounded-full border border-gray-800/50"
+              aria-label="Previous step"
+            >
+              <ChevronLeft className="w-5 h-5 text-text-primary" />
+            </button>
             
-            {/* Progress indicator */}
-            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex gap-2">
-              {steps.map((step) => (
-                <button
-                  key={step.id}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300",
-                    activeStep === step.id ? "bg-primary w-6" : "bg-gray-700"
-                  )}
-                  onClick={() => setActiveStep(step.id)}
-                  aria-label={`Go to step ${step.title}`}
-                />
-              ))}
+            <button 
+              onClick={nextStep}
+              className="absolute right-2 top-1/2 -translate-y-1/2 z-10 bg-background-card/80 hover:bg-background-card p-2 rounded-full border border-gray-800/50"
+              aria-label="Next step"
+            >
+              <ChevronRight className="w-5 h-5 text-text-primary" />
+            </button>
+            
+            {/* Step content with animation */}
+            <div className="min-h-[300px] flex items-center">
+              <AnimatePresence mode="wait">
+                <motion.div 
+                  key={activeStep}
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  transition={{ duration: 0.3 }}
+                  className="w-full flex flex-col md:flex-row items-center gap-8"
+                >
+                  {/* Step visualization */}
+                  <div className="w-full md:w-1/2">
+                    <div className={`aspect-square md:aspect-video rounded-xl overflow-hidden relative bg-gradient-to-br ${steps[activeStep].color} flex items-center justify-center p-8 shadow-lg`}>
+                      <motion.div
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ duration: 0.5, delay: 0.2 }}
+                        className="text-white"
+                      >
+                        {/* Render the icon component */}
+                        {React.createElement(steps[activeStep].icon, { className: "w-24 h-24 md:w-32 md:h-32 mx-auto" })}
+                      </motion.div>
+                    </div>
+                  </div>
+                  
+                  {/* Step text content */}
+                  <div className="w-full md:w-1/2 text-center md:text-left">
+                    <div className="inline-flex items-center justify-center w-10 h-10 rounded-full bg-primary/20 text-primary mb-4">
+                      {activeStep + 1}
+                    </div>
+                    <h3 className="text-2xl font-bold mb-3 text-text-primary">
+                      {steps[activeStep].title}
+                    </h3>
+                    <p className="text-text-secondary text-lg">
+                      {steps[activeStep].description}
+                    </p>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
             </div>
           </div>
-        </div>
-        
-        {/* Call to action */}
-        <div className="text-center">
-          <p className="text-text-secondary mb-6">
-            Ready to start converting cryptocurrencies with ease?
-          </p>
-          <a
-            href="#download"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-primary to-primary-light text-white px-8 py-3 rounded-full font-medium hover:shadow-glow transition-all"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-              <polyline points="7 10 12 15 17 10"></polyline>
-              <line x1="12" y1="15" x2="12" y2="3"></line>
-            </svg>
-            Download Now
-          </a>
+          
+          {/* Step quick navigation */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-6">
+            {steps.map((step, index) => (
+              <button
+                key={step.id}
+                onClick={() => setActiveStep(index)}
+                className={cn(
+                  "py-3 px-4 rounded-lg transition-all duration-300 flex flex-col items-center text-center",
+                  activeStep === index 
+                    ? "bg-primary/20 border border-primary/30" 
+                    : "bg-background-card/50 border border-gray-800/30 hover:bg-background-card/80"
+                )}
+              >
+                {/* Render the icon component */}
+                {React.createElement(step.icon, { 
+                  className: cn(
+                    "w-5 h-5 mb-1",
+                    activeStep === index ? "text-primary" : "text-text-secondary"
+                  )
+                })}
+                <span className={cn(
+                  "text-sm font-medium",
+                  activeStep === index ? "text-text-primary" : "text-text-secondary"
+                )}>
+                  {step.title}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </section>

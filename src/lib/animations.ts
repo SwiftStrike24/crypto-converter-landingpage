@@ -69,4 +69,17 @@ export const pulse = {
       ease: "easeInOut"
     }
   }
+};
+
+/**
+ * Animation for horizontal scrolling text
+ */
+export const scrollXAnimation = {
+  '@keyframes scrollX': {
+    '0%': { transform: 'translateX(0)' },
+    '100%': { transform: 'translateX(-50%)' }
+  },
+  '.animate-scroll-x': {
+    animation: 'scrollX 20s linear infinite'
+  }
 }; 

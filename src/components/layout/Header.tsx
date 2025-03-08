@@ -10,8 +10,6 @@ import { zIndex } from '@/lib/theme';
 const navLinks = [
   { href: '#features', label: 'Features' },
   { href: '#how-it-works', label: 'How It Works' },
-  { href: '#technologies', label: 'Technologies' },
-  { href: '#testimonials', label: 'Testimonials' },
   { href: '#faq', label: 'FAQ' },
 ];
 

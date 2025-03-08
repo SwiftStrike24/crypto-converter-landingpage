@@ -3,8 +3,6 @@ import Footer from '@/components/layout/Footer';
 import Hero from '@/components/sections/Hero';
 import Features from '@/components/sections/Features';
 import HowItWorks from '@/components/sections/HowItWorks';
-import Technologies from '@/components/sections/Technologies';
-import Testimonials from '@/components/sections/Testimonials';
 import Download from '@/components/sections/Download';
 import FAQ from '@/components/sections/FAQ';
 
@@ -16,8 +14,6 @@ export default function Home() {
         <Hero />
         <Features />
         <HowItWorks />
-        <Technologies />
-        <Testimonials />
         <Download />
         <FAQ />
       </main>

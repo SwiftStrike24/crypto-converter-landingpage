@@ -59,8 +59,6 @@ src/
 │   │   ├── Hero.tsx         # Main hero section
 │   │   ├── Features.tsx     # Features showcase
 │   │   ├── HowItWorks.tsx   # How it works section
-│   │   ├── Technologies.tsx # Technologies section
-│   │   ├── Testimonials.tsx # Testimonials section
 │   │   ├── Download.tsx     # Download section
 │   │   ├── FAQ.tsx          # FAQ section
 │   ├── layout/              # Layout components

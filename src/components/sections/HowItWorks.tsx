@@ -3,18 +3,11 @@
 import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, ChevronLeft, Download, RefreshCw, BarChart3, Wallet } from 'lucide-react';
+import { ChevronRight, ChevronLeft, RefreshCw, BarChart3, Wallet, Activity } from 'lucide-react';
 import React from 'react';
 
 // Steps data with icons
 const steps = [
-  {
-    id: 'install',
-    title: 'Install the App',
-    description: 'Download and install Crypto Converter on your preferred platform (Windows, macOS, or Linux).',
-    color: 'from-blue-500 to-blue-600',
-    icon: Download,
-  },
   {
     id: 'select',
     title: 'Select Cryptocurrencies',
@@ -35,6 +28,13 @@ const steps = [
     description: 'View detailed price charts and historical data for any cryptocurrency with customizable timeframes.',
     color: 'from-orange-500 to-orange-600',
     icon: BarChart3,
+  },
+  {
+    id: 'analyze',
+    title: 'Technical Analysis',
+    description: 'Get professional buy/sell signals and market sentiment analysis powered by TradingView to make smarter trading decisions.',
+    color: 'from-red-500 to-red-600',
+    icon: Activity,
   },
 ];
 
@@ -71,7 +71,7 @@ export default function HowItWorks() {
             How It Works
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto">
-            Get started with Crypto Converter in just a few simple steps
+            Powerful features that make crypto conversion simple and intuitive
           </p>
         </motion.div>
         

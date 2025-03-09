@@ -2,8 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import ConverterDemo from '@/components/demo/ConverterDemo';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import React from 'react';
 
 // Platform data
 const platforms = [
@@ -16,6 +23,7 @@ const platforms = [
       </svg>
     ),
     color: '#0078D7',
+    disabled: false,
   },
   {
     id: 'mac',
@@ -26,6 +34,8 @@ const platforms = [
       </svg>
     ),
     color: '#999999',
+    disabled: true,
+    comingSoon: true,
   },
 ];
 
@@ -33,12 +43,6 @@ const platforms = [
 const defaultVersionInfo = {
   current: '1.0.0',
   releaseDate: 'March 8, 2025',
-  changelog: [
-    'Added support for 10 new cryptocurrencies',
-    'Improved real-time price update speed',
-    'Enhanced dark mode UI',
-    'Fixed minor bugs and improved stability',
-  ],
 };
 
 // Type for file metadata
@@ -57,16 +61,32 @@ interface ApiError {
 }
 
 export default function Download() {
-  const [selectedPlatform, setSelectedPlatform] = useState(platforms[0].id);
+  const [selectedPlatform, setSelectedPlatform] = useState(platforms.find(p => !p.disabled)?.id || platforms[0].id);
   const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [showNotification, setShowNotification] = useState(false);
+  
+  // Handle macOS click to show notification
+  const handleMacClick = () => {
+    setShowNotification(true);
+    setTimeout(() => setShowNotification(false), 3000);
+  };
   
   // Fetch file metadata when platform changes or on retry
   useEffect(() => {
     async function fetchFileMetadata() {
+      // Skip API call if the platform is disabled (coming soon)
+      const platformData = platforms.find(p => p.id === selectedPlatform);
+      if (platformData?.disabled) {
+        setIsLoading(false);
+        setError(null);
+        setFileMetadata(null);
+        return;
+      }
+      
       setIsLoading(true);
       setError(null);
       
@@ -142,6 +162,32 @@ export default function Download() {
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-background to-transparent"></div>
       <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-primary/10 to-transparent opacity-30 blur-3xl"></div>
       
+      {/* Notification for macOS */}
+      <AnimatePresence>
+        {showNotification && (
+          <motion.div 
+            className="fixed top-6 right-6 bg-background-card border border-purple-500/30 p-4 rounded-lg shadow-glow-sm z-50 max-w-xs"
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <div className="flex items-start gap-3">
+              <div className="text-purple-400">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="8" x2="12" y2="12"></line>
+                  <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+              </div>
+              <div>
+                <h4 className="font-medium text-text-primary mb-1">macOS Version Coming Soon</h4>
+                <p className="text-sm text-text-secondary">We&apos;re working hard to bring Crypto Converter to macOS. Stay tuned!</p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      
       <div className="container mx-auto px-4 relative z-10">
         <motion.div 
           className="text-center mb-16"
@@ -205,32 +251,80 @@ export default function Download() {
               {/* Platform selector */}
               <div className="flex flex-wrap gap-4 mb-8">
                 {platforms.map((platform) => (
-                  <motion.button
-                    key={platform.id}
-                    className={cn(
-                      "flex items-center gap-3 px-5 py-3 rounded-xl transition-all duration-300",
-                      "border",
-                      selectedPlatform === platform.id 
-                        ? "border-primary/50 bg-primary/10" 
-                        : "border-gray-800/50 hover:border-gray-700/50 bg-background-darker/50"
+                  <React.Fragment key={platform.id}>
+                    {platform.comingSoon ? (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <motion.div
+                              className={cn(
+                                "flex items-center gap-3 px-5 py-3 rounded-xl transition-all duration-300 relative",
+                                "border border-gray-800/50 bg-background-darker/50",
+                                "opacity-80 cursor-help"
+                              )}
+                              whileHover={{ 
+                                scale: 1.02,
+                                borderColor: 'rgba(139, 92, 246, 0.3)' 
+                              }}
+                              onClick={handleMacClick}
+                            >
+                              <div className="text-text-secondary/80">
+                                {platform.icon}
+                              </div>
+                              <div className="flex flex-col">
+                                <span className="font-medium text-text-primary/80 line-through decoration-2 decoration-purple-500/50">
+                                  {platform.name}
+                                </span>
+                              </div>
+                              <div className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-xs px-2 py-0.5 rounded-full shadow-glow-sm">
+                                <motion.span
+                                  initial={{ opacity: 0.7 }}
+                                  animate={{ opacity: 1 }}
+                                  transition={{ 
+                                    repeat: Infinity, 
+                                    repeatType: "reverse", 
+                                    duration: 1.5 
+                                  }}
+                                  className="inline-block"
+                                >
+                                  Coming Soon
+                                </motion.span>
+                              </div>
+                            </motion.div>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="bg-background-card border border-gray-800 text-text-primary p-3 rounded-lg shadow-xl max-w-xs">
+                            <p className="text-sm">The macOS version is currently in development.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    ) : (
+                      <motion.button
+                        className={cn(
+                          "flex items-center gap-3 px-5 py-3 rounded-xl transition-all duration-300 relative",
+                          "border",
+                          selectedPlatform === platform.id 
+                            ? "border-primary/50 bg-primary/10" 
+                            : "border-gray-800/50 hover:border-gray-700/50 bg-background-darker/50"
+                        )}
+                        onClick={() => setSelectedPlatform(platform.id)}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                      >
+                        <div className={cn(
+                          "text-text-secondary",
+                          selectedPlatform === platform.id && "text-primary"
+                        )}>
+                          {platform.icon}
+                        </div>
+                        <span className={cn(
+                          "font-medium",
+                          selectedPlatform === platform.id ? "text-primary" : "text-text-primary"
+                        )}>
+                          {platform.name}
+                        </span>
+                      </motion.button>
                     )}
-                    onClick={() => setSelectedPlatform(platform.id)}
-                    whileHover={{ scale: 1.03 }}
-                    whileTap={{ scale: 0.98 }}
-                  >
-                    <div className={cn(
-                      "text-text-secondary",
-                      selectedPlatform === platform.id && "text-primary"
-                    )}>
-                      {platform.icon}
-                    </div>
-                    <span className={cn(
-                      "font-medium",
-                      selectedPlatform === platform.id ? "text-primary" : "text-text-primary"
-                    )}>
-                      {platform.name}
-                    </span>
-                  </motion.button>
+                  </React.Fragment>
                 ))}
               </div>
               
@@ -326,26 +420,66 @@ export default function Download() {
                 )}
               </div>
               
-              {/* Changelog */}
-              <div>
-                <h4 className="text-lg font-semibold text-text-primary mb-3">What&apos;s New</h4>
-                <ul className="space-y-2">
-                  {versionInfo.changelog.map((item, index) => (
-                    <motion.li 
-                      key={index} 
-                      className="flex items-start gap-2 text-text-secondary"
-                      initial={{ opacity: 0, x: 20 }}
-                      whileInView={{ opacity: 1, x: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ duration: 0.3, delay: 0.1 * index }}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary mt-1">
-                        <polyline points="20 6 9 17 4 12"></polyline>
+              {/* Modern design element */}
+              <div className="mt-8 pt-6 border-t border-gray-800/30">
+                <div className="flex flex-wrap gap-6 justify-between">
+                  <motion.div 
+                    className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-background-darker/50"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="bg-primary/10 p-2.5 rounded-full transition-colors group-hover:bg-primary/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                        <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
                       </svg>
-                      <span>{item}</span>
-                    </motion.li>
-                  ))}
-                </ul>
+                    </div>
+                    <div className="text-sm text-text-secondary">
+                      <span className="block text-text-primary font-medium">Free Updates</span>
+                      <span>Always stay current</span>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-background-darker/50"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.1 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="bg-primary/10 p-2.5 rounded-full transition-colors group-hover:bg-primary/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                      </svg>
+                    </div>
+                    <div className="text-sm text-text-secondary">
+                      <span className="block text-text-primary font-medium">Secure</span>
+                      <span>End-to-end encryption</span>
+                    </div>
+                  </motion.div>
+                  
+                  <motion.div 
+                    className="flex items-center gap-3 p-2 rounded-lg transition-colors hover:bg-background-darker/50"
+                    initial={{ opacity: 0, y: 10 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    whileHover={{ scale: 1.02 }}
+                  >
+                    <div className="bg-primary/10 p-2.5 rounded-full transition-colors group-hover:bg-primary/20">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                      </svg>
+                    </div>
+                    <div className="text-sm text-text-secondary">
+                      <span className="block text-text-primary font-medium">Lightning Fast</span>
+                      <span>Real-time conversions</span>
+                    </div>
+                  </motion.div>
+                </div>
               </div>
             </div>
           </motion.div>

@@ -409,12 +409,35 @@ export default function Hero() {
 
               {/* Floating badge */}
               <motion.div
-                className="absolute -bottom-4 -right-4 bg-secondary text-background px-4 py-2 rounded-full text-sm font-medium shadow-lg"
+                className="absolute -bottom-4 -right-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-purple-500/30 backdrop-blur-sm overflow-hidden"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
+                whileHover={{ 
+                  scale: 1.05,
+                  boxShadow: "0 0 20px rgba(139, 92, 246, 0.5)"
+                }}
               >
-                Cross-Platform
+                {/* Animated gradient background */}
+                <motion.div 
+                  className="absolute inset-0 bg-gradient-to-r from-purple-600/0 via-white/20 to-purple-600/0"
+                  animate={{
+                    x: ["100%", "-100%"],
+                  }}
+                  transition={{
+                    repeat: Infinity,
+                    repeatType: "loop",
+                    duration: 2,
+                    ease: "linear",
+                  }}
+                />
+                
+                <div className="flex items-center gap-2 relative z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
+                  </svg>
+                  <span className="font-semibold">Smart Analysis</span>
+                </div>
               </motion.div>
             </motion.div>
           </ClientOnly>

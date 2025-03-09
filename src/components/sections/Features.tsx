@@ -43,14 +43,21 @@ const features = [
     color: 'from-green-500/20 to-green-600/10',
   },
   {
-    id: 'cross-platform',
-    title: 'Cross-Platform',
-    description: 'Available for Windows, macOS, and Linux with the same great experience.',
+    id: 'technical-analysis',
+    title: 'Technical Analysis',
+    description: 'Get instant buy/sell signals and market sentiment analysis powered by TradingView for smarter trading decisions.',
     icon: (
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-        <line x1="8" y1="21" x2="16" y2="21"></line>
-        <line x1="12" y1="17" x2="12" y2="21"></line>
+        <circle cx="12" cy="12" r="10"></circle>
+        <path d="M12 6v2"></path>
+        <path d="M16.24 7.76l-1.42 1.42"></path>
+        <path d="M18 12h-2"></path>
+        <path d="M16.24 16.24l-1.42-1.42"></path>
+        <path d="M12 18v-2"></path>
+        <path d="M7.76 16.24l1.42-1.42"></path>
+        <path d="M6 12h2"></path>
+        <path d="M7.76 7.76l1.42 1.42"></path>
+        <path d="M12 12L9 15"></path>
       </svg>
     ),
     color: 'from-orange-500/20 to-orange-600/10',

@@ -74,8 +74,8 @@
   --multi-crypto-end: 262 83% 58%;
   --live-updates-start: 142 71% 45%;
   --live-updates-end: 160 84% 39%;
-  --cross-platform-start: 21 90% 48%;
-  --cross-platform-end: 27 96% 61%;
+  --technical-analysis-start: 21 90% 48%;
+  --technical-analysis-end: 27 96% 61%;
   --portfolio-start: 0 91% 71%;
   --portfolio-end: 346 77% 49%;
   --dark-mode-start: 244 75% 57%;
@@ -225,6 +225,10 @@
 
 .shadow-glow {
   box-shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+}
+
+.shadow-glow-sm {
+  box-shadow: 0 0 8px rgba(138, 43, 226, 0.4);
 }
 
 .bg-grid-pattern {

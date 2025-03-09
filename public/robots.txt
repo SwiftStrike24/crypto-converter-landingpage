@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://crypto-converter.vercel.app/sitemap.xml 
+Sitemap: https://crypto-converter-landingpage.vercel.app/sitemap.xml 

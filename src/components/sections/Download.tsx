@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import ConverterDemo from '@/components/demo/ConverterDemo';
@@ -15,8 +15,6 @@ const platforms = [
         <path d="M0 3.449L9.75 2.1v9.451H0m10.949-9.602L24 0v11.4H10.949M0 12.6h9.75v9.451L0 20.699M10.949 12.6H24V24l-12.9-1.801"/>
       </svg>
     ),
-    downloadUrl: '/downloads/crypto-converter-setup.exe',
-    size: '24.5 MB',
     color: '#0078D7',
   },
   {
@@ -27,16 +25,14 @@ const platforms = [
         <path d="M22 17.607c-.786 2.28-3.139 6.317-5.563 6.361-1.608.031-2.125-.953-3.963-.953-1.837 0-2.412.923-3.932.983-2.572.099-6.542-5.827-6.542-10.995 0-4.747 3.308-7.1 6.198-7.143 1.55-.028 3.014 1.045 3.959 1.045.949 0 2.727-1.29 4.596-1.101.782.033 2.979.315 4.389 2.377-3.741 2.442-3.158 7.549.858 9.426zm-5.222-17.607c-2.826.114-5.132 3.079-4.81 5.531 2.612.203 5.118-2.725 4.81-5.531z"/>
       </svg>
     ),
-    downloadUrl: '/downloads/crypto-converter.dmg',
-    size: '23.8 MB',
     color: '#999999',
   },
 ];
 
-// Version information
-const versionInfo = {
+// Default version information (will be updated from API)
+const defaultVersionInfo = {
   current: '1.0.0',
-  releaseDate: 'March 5, 2025',
+  releaseDate: 'March 8, 2025',
   changelog: [
     'Added support for 10 new cryptocurrencies',
     'Improved real-time price update speed',
@@ -45,10 +41,98 @@ const versionInfo = {
   ],
 };
 
+// Type for file metadata
+interface FileMetadata {
+  key: string;
+  filename: string;
+  size: string;
+  version: string;
+  releaseDate: string;
+}
+
+// Type for API error
+interface ApiError {
+  error: string;
+  details?: string;
+}
+
 export default function Download() {
   const [selectedPlatform, setSelectedPlatform] = useState(platforms[0].id);
+  const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+  const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  const selectedPlatformData = platforms.find(p => p.id === selectedPlatform) || platforms[0];
+  // Fetch file metadata when platform changes or on retry
+  useEffect(() => {
+    async function fetchFileMetadata() {
+      setIsLoading(true);
+      setError(null);
+      
+      try {
+        console.log(`Fetching file metadata for ${selectedPlatform}...`);
+        const response = await fetch(`/api/files?platform=${selectedPlatform}`);
+        
+        if (!response.ok) {
+          const errorData = await response.json() as ApiError;
+          throw new Error(errorData.error || `Failed to fetch file metadata (${response.status})`);
+        }
+        
+        const data = await response.json();
+        console.log(`File metadata received:`, data);
+        setFileMetadata(data);
+      } catch (err) {
+        console.error('Error fetching file metadata:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load download information. Please try again later.');
+        
+        // Auto-retry after 5 seconds (but only once)
+        if (retryCount === 0) {
+          const timeout = setTimeout(() => {
+            console.log('Auto-retrying file metadata fetch...');
+            setRetryCount(prev => prev + 1);
+          }, 5000);
+          
+          setRetryTimeout(timeout);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    fetchFileMetadata();
+    
+    // Clean up timeout on unmount
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
+  }, [selectedPlatform, retryCount, retryTimeout]);
+  
+  // Function to handle manual retry
+  const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
+  };
+  
+  // Prepare platform data with download URL
+  const selectedPlatformData = {
+    ...platforms.find(p => p.id === selectedPlatform) || platforms[0],
+    downloadUrl: fileMetadata ? 
+      // Use public URL if available, otherwise fall back to API route
+      (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ? 
+        `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${encodeURIComponent(fileMetadata.key)}` : 
+        `/api/download?key=${encodeURIComponent(fileMetadata.key)}`) : 
+      '#',
+    size: fileMetadata?.size || '24.5 MB',
+  };
+  
+  // Prepare version info
+  const versionInfo = {
+    ...defaultVersionInfo,
+    current: fileMetadata?.version || defaultVersionInfo.current,
+    releaseDate: fileMetadata?.releaseDate || defaultVersionInfo.releaseDate,
+  };
   
   return (
     <section id="download" className="py-24 relative overflow-hidden">
@@ -182,23 +266,64 @@ export default function Download() {
                 </div>
                 
                 {/* Download button */}
-                <motion.a
-                  href={selectedPlatformData.downloadUrl}
-                  className={cn(
-                    "w-full flex items-center justify-center gap-2 py-4 rounded-xl font-medium text-white",
-                    "bg-gradient-to-r from-primary to-primary-light",
-                    "hover:shadow-glow transition-all duration-300"
-                  )}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="7 10 12 15 17 10"></polyline>
-                    <line x1="12" y1="15" x2="12" y2="3"></line>
-                  </svg>
-                  Download for {selectedPlatformData.name}
-                </motion.a>
+                {error ? (
+                  <div className="text-center">
+                    <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-4 mb-4 text-red-400">
+                      <p className="mb-2 font-medium">{error}</p>
+                      <p className="text-sm text-red-300/70">
+                        There was a problem loading the download information. This could be due to a network issue or server problem.
+                      </p>
+                    </div>
+                    <motion.button
+                      onClick={handleRetry}
+                      className="px-6 py-2 rounded-lg bg-background-darker border border-gray-800 text-text-primary hover:bg-background-darker/80 transition-colors"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                    >
+                      <div className="flex items-center gap-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 2v6h-6"></path>
+                          <path d="M3 12a9 9 0 0 1 15-6.7L21 8"></path>
+                          <path d="M3 22v-6h6"></path>
+                          <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
+                        </svg>
+                        Try Again
+                      </div>
+                    </motion.button>
+                  </div>
+                ) : (
+                  <motion.a
+                    href={selectedPlatformData.downloadUrl}
+                    className={cn(
+                      "w-full flex items-center justify-center gap-2 py-4 rounded-xl font-medium text-white",
+                      "bg-gradient-to-r from-primary to-primary-light",
+                      "hover:shadow-glow transition-all duration-300",
+                      isLoading && "opacity-70 pointer-events-none"
+                    )}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    download
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Loading...
+                      </>
+                    ) : (
+                      <>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                          <polyline points="7 10 12 15 17 10"></polyline>
+                          <line x1="12" y1="15" x2="12" y2="3"></line>
+                        </svg>
+                        Download for {selectedPlatformData.name}
+                      </>
+                    )}
+                  </motion.a>
+                )}
               </div>
               
               {/* Changelog */}

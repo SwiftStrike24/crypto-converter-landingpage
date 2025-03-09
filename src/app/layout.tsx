@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { initializeApp } from "@/lib/init";
+
+// Initialize the app during server startup
+if (typeof window === 'undefined') {
+  initializeApp();
+}
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

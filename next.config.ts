@@ -8,6 +8,10 @@ const nextConfig = {
   compress: true,
   productionBrowserSourceMaps: false,
   swcMinify: true,
+  env: {
+    CLOUDFLARE_ACCOUNT_ID: process.env.CLOUDFLARE_ACCOUNT_ID,
+    R2_PUBLIC_URL: process.env.R2_PUBLIC_URL,
+  },
 };
 
 export default nextConfig;

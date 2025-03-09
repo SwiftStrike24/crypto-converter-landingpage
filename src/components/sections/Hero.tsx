@@ -5,9 +5,12 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { getCryptoPrices, CryptoPrice, formatCurrency, FEATURED_CRYPTOS, CRYPTO_METADATA } from '@/lib/api';
-import { motion } from 'framer-motion';
+import { motion } from "framer-motion";
 import ClientOnly from '@/components/ClientOnly';
 import ConverterDemo from '@/components/demo/ConverterDemo';
+// Import our new animation components
+import ParticleWave from '@/components/animations/ParticleWave';
+import WavyBackground from '@/components/animations/WavyBackground';
 
 // Floating crypto coin component with physics-based animation
 const FloatingCryptoIcon = ({
@@ -40,17 +43,17 @@ const FloatingCryptoIcon = ({
   const getCoinColor = (id: string): string => {
     return CRYPTO_METADATA[id]?.color || 'bg-gray-500';
   };
-
+  
   // Track mouse position using a ref to avoid re-renders
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       mousePositionRef.current = { x: e.clientX, y: e.clientY };
     };
-
+    
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
-
+  
   // Set initial position on mount
   useEffect(() => {
     const xPos = 5 + (index % 4) * 23 + Math.random() * 10; // Distributed across width
@@ -66,7 +69,7 @@ const FloatingCryptoIcon = ({
       scale: 1
     }));
   }, [index]);
-
+  
   // Continuous animation effect
   useEffect(() => {
     if (position.x === 0 && position.y === 0) return;
@@ -79,44 +82,44 @@ const FloatingCryptoIcon = ({
     const animationPeriodX = 8000 + index * 1000 * (1 / floatSpeed); // Adjust period based on floatSpeed
     const animationPeriodY = 10000 + index * 1200 * (1 / floatSpeed); // Adjust period based on floatSpeed
     const rotationPeriod = 15000 + index * 800; // 15-21 seconds for rotation cycle
-
+    
     let mouseInfluenceX = 0;
     let mouseInfluenceY = 0;
     const mouseInfluenceDecay = 0.9; // Decay rate for mouse influence
-
+    
     const animateFloat = (timestamp: number) => {
       if (!lastTime) lastTime = timestamp;
       const deltaTime = timestamp - lastTime;
       lastTime = timestamp;
-
+      
       totalTime += deltaTime;
-
+      
       // Base animation runs continuously
       const xMovement = Math.sin(totalTime / animationPeriodX * Math.PI * 2) * floatDistance;
       const yMovement = Math.sin(totalTime / animationPeriodY * Math.PI * 2) * floatDistance;
       const rotation = Math.sin(totalTime / rotationPeriod * Math.PI * 2) * rotationAmount;
-
+      
       // Decay mouse influence every frame
       mouseInfluenceX *= mouseInfluenceDecay;
       mouseInfluenceY *= mouseInfluenceDecay;
-
+      
       // Apply repulsion only when mouse is near
       if (coinRef.current) {
         const rect = coinRef.current.getBoundingClientRect();
         const coinCenterX = rect.left + rect.width / 2;
         const coinCenterY = rect.top + rect.height / 2;
-
+        
         const dx = mousePositionRef.current.x - coinCenterX;
         const dy = mousePositionRef.current.y - coinCenterY;
         const distance = Math.sqrt(dx * dx + dy * dy);
-
+        
         if (distance < interactionDistance && distance > 0) {
           const repulsionStrength = (1 - distance / interactionDistance) * interactionStrength;
           mouseInfluenceX = -dx * repulsionStrength;
           mouseInfluenceY = -dy * repulsionStrength;
         }
       }
-
+      
       // Update animation values with base movement plus mouse influence
       setAnimationValues({
         x: xMovement + mouseInfluenceX,
@@ -124,19 +127,19 @@ const FloatingCryptoIcon = ({
         rotate: rotation,
         scale: 1
       });
-
+      
       animationFrame = requestAnimationFrame(animateFloat);
     };
-
+    
     animationFrame = requestAnimationFrame(animateFloat);
-
+    
     return () => {
       cancelAnimationFrame(animationFrame);
     };
   }, [position, index, floatDistance, interactionDistance, interactionStrength, rotationAmount, floatSpeed]);
 
   if (position.x === 0 && position.y === 0) return null;
-
+  
   return (
     <div
       ref={coinRef}
@@ -177,7 +180,7 @@ export default function Hero() {
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
   const [scrollY, setScrollY] = useState(0);
-
+  
   // Set isClient to true on mount (client-side only)
   useEffect(() => {
     setIsClient(true);
@@ -200,23 +203,23 @@ export default function Hero() {
     };
 
     fetchData();
-
+    
     // Refresh data every 5 minutes instead of every minute
     // This reduces API calls significantly while keeping data reasonably fresh
     const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
-
+  
   // Parallax effect on scroll
   useEffect(() => {
     const handleScroll = () => {
       setScrollY(window.scrollY);
     };
-
+    
     window.addEventListener('scroll', handleScroll);
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
+  
   // Generate placeholder crypto data from CRYPTO_METADATA
   const generatePlaceholderData = (): CryptoPrice[] => {
     return FEATURED_CRYPTOS.map(id => {
@@ -234,22 +237,26 @@ export default function Hero() {
 
   // Use real data if available, otherwise use generated placeholder data
   const displayData = cryptoData.length > 0 ? cryptoData : generatePlaceholderData();
-
+  
   // Get coin color from CRYPTO_METADATA
   const getCoinColor = (id: string): string => {
     return CRYPTO_METADATA[id]?.color || 'bg-gray-500';
   };
-
+  
   // Calculate transform styles based on state
   const getTitleTransform = () => `translateY(${scrollY * 0.2}px)`;
   const getSubtitleTransform = () => `translateY(${scrollY * 0.1}px)`;
   const getAppPreviewTransform = () => `translateY(${scrollY * 0.05}px)`;
-
+  
   return (
     <section
       ref={heroRef}
       className="relative min-h-screen pt-24 pb-16 overflow-hidden bg-background-gradient"
     >
+      {/* Add our animation components */}
+      <ParticleWave />
+      <WavyBackground />
+      
       {/* Background gradient with noise texture */}
       <div className="absolute inset-0 bg-gradient-to-b from-background to-background-darker opacity-80"></div>
       <div className="absolute inset-0 bg-noise opacity-5"></div>
@@ -285,9 +292,9 @@ export default function Hero() {
                 Real-Time Crypto Conversion at Your Fingertips
               </motion.h1>
             </ClientOnly>
-
+            
             <ClientOnly>
-              <motion.p
+              <motion.p 
                 className="hero-subtitle text-text-secondary text-lg md:text-xl mb-8 max-w-xl"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -297,15 +304,15 @@ export default function Hero() {
                 A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking. Convert between multiple cryptocurrencies with live price updates.
               </motion.p>
             </ClientOnly>
-
+            
             <motion.div
               className="flex flex-col sm:flex-row gap-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}
             >
-              <Link
-                href="#download"
+              <Link 
+                href="#download" 
                 className={cn(
                   "bg-gradient-to-r from-primary to-primary-light text-white",
                   "px-8 py-3 rounded-full font-medium text-center",
@@ -321,8 +328,8 @@ export default function Hero() {
                 Download Now
               </Link>
 
-              <Link
-                href="#features"
+              <Link 
+                href="#features" 
                 className={cn(
                   "border border-primary/30 text-text-primary",
                   "px-8 py-3 rounded-full font-medium text-center",
@@ -336,7 +343,7 @@ export default function Hero() {
                 See Features
               </Link>
             </motion.div>
-
+            
             {/* Live Crypto Prices */}
             <motion.div
               className="mt-12 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4"
@@ -380,7 +387,7 @@ export default function Hero() {
               )}
             </motion.div>
           </div>
-
+          
           {/* App preview */}
           <ClientOnly>
             <motion.div
@@ -443,7 +450,7 @@ export default function Hero() {
           </ClientOnly>
         </div>
       </div>
-
+      
       {/* Scroll indicator */}
       <motion.div
         className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col items-center"

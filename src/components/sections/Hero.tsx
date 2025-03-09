@@ -192,6 +192,8 @@ export default function Hero() {
         setCryptoData(data);
       } catch (error) {
         console.error('Error fetching crypto data:', error);
+        // Use placeholder data on error
+        setCryptoData(generatePlaceholderData());
       } finally {
         setIsLoading(false);
       }
@@ -199,8 +201,9 @@ export default function Hero() {
 
     fetchData();
 
-    // Refresh data every 60 seconds
-    const interval = setInterval(fetchData, 60000);
+    // Refresh data every 5 minutes instead of every minute
+    // This reduces API calls significantly while keeping data reasonably fresh
+    const interval = setInterval(fetchData, 5 * 60 * 1000);
     return () => clearInterval(interval);
   }, []);
 

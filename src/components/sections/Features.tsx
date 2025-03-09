@@ -17,7 +17,6 @@ const features = [
       </svg>
     ),
     color: 'from-blue-500/20 to-blue-600/10',
-    size: 'large',
   },
   {
     id: 'multi-crypto',
@@ -30,7 +29,6 @@ const features = [
       </svg>
     ),
     color: 'from-purple-500/20 to-purple-600/10',
-    size: 'medium',
   },
   {
     id: 'live-updates',
@@ -43,7 +41,6 @@ const features = [
       </svg>
     ),
     color: 'from-green-500/20 to-green-600/10',
-    size: 'medium',
   },
   {
     id: 'cross-platform',
@@ -57,7 +54,6 @@ const features = [
       </svg>
     ),
     color: 'from-orange-500/20 to-orange-600/10',
-    size: 'small',
   },
   {
     id: 'portfolio',
@@ -69,7 +65,6 @@ const features = [
       </svg>
     ),
     color: 'from-red-500/20 to-red-600/10',
-    size: 'small',
   },
   {
     id: 'dark-mode',
@@ -81,7 +76,6 @@ const features = [
       </svg>
     ),
     color: 'from-indigo-500/20 to-indigo-600/10',
-    size: 'small',
   }
 ];
 
@@ -90,10 +84,10 @@ export default function Features() {
   
   return (
     <section id="features" className="py-24 bg-background relative overflow-hidden">
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
-      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-radial from-primary/20 to-transparent opacity-30 blur-3xl"></div>
-      <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-radial from-secondary/20 to-transparent opacity-30 blur-3xl"></div>
+      {/* Background elements - subtle noise texture */}
+      <div className="absolute inset-0 bg-noise-pattern opacity-[0.03]"></div>
+      <div className="absolute top-0 right-0 w-1/3 h-1/3 bg-gradient-radial from-primary/10 to-transparent opacity-20 blur-3xl"></div>
+      <div className="absolute bottom-0 left-0 w-1/3 h-1/3 bg-gradient-radial from-secondary/10 to-transparent opacity-20 blur-3xl"></div>
       
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
@@ -117,55 +111,97 @@ export default function Features() {
           </motion.p>
         </div>
         
-        {/* Bento Grid Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
-            <motion.div
+        {/* Featured highlight */}
+        <motion.div 
+          className="mb-16 relative overflow-hidden rounded-2xl border border-gray-800/30 bg-background-card/50 backdrop-blur-sm"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          {features.map((feature) => (
+            <div 
               key={feature.id}
               className={cn(
-                "group relative overflow-hidden rounded-2xl border border-gray-800/50 bg-background-card p-6 hover:border-primary/50 transition-all duration-300",
-                "backdrop-blur-sm flex flex-col",
-                feature.size === 'large' ? 'lg:col-span-2 lg:row-span-2' : 
-                feature.size === 'medium' ? 'lg:col-span-1 lg:row-span-2' : 
-                'lg:col-span-1 lg:row-span-1',
-                activeFeature === feature.id ? 'ring-2 ring-primary/50' : ''
+                "absolute inset-0 p-8 md:p-12 transition-opacity duration-500 flex flex-col md:flex-row items-center gap-8",
+                activeFeature === feature.id ? "opacity-100 z-10" : "opacity-0 z-0"
+              )}
+            >
+              <div className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br flex-shrink-0 flex items-center justify-center text-white"
+                style={{
+                  background: `linear-gradient(135deg, var(--${feature.id}-start, #6366f1), var(--${feature.id}-end, #8b5cf6))`
+                }}
+              >
+                <div className="w-12 h-12 md:w-14 md:h-14">
+                  {feature.icon}
+                </div>
+              </div>
+              
+              <div className="flex-1 text-center md:text-left">
+                <h3 className="text-2xl md:text-3xl font-bold mb-3 text-text-primary">{feature.title}</h3>
+                <p className="text-text-secondary text-lg max-w-2xl">{feature.description}</p>
+              </div>
+            </div>
+          ))}
+          
+          {/* Gradient background */}
+          <div className="absolute inset-0 -z-10 bg-gradient-to-br from-background-card to-background-card/20 opacity-50"></div>
+        </motion.div>
+        
+        {/* Feature Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          {features.map((feature, index) => (
+            <motion.button
+              key={feature.id}
+              className={cn(
+                "group relative h-[180px] rounded-xl border transition-all duration-300 p-6 flex flex-col items-start justify-between text-left",
+                activeFeature === feature.id 
+                  ? "border-primary/50 bg-primary/5" 
+                  : "border-gray-800/30 bg-background-card/30 hover:bg-background-card/50"
               )}
               onClick={() => setActiveFeature(feature.id)}
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
+              transition={{ duration: 0.4, delay: index * 0.1 }}
               whileHover={{ 
-                scale: 1.02,
-                transition: { duration: 0.2 }
+                y: -5, 
+                boxShadow: "0 15px 30px -10px rgba(var(--primary), 0.15)",
+                transition: { duration: 0.2 } 
               }}
             >
               {/* Feature icon */}
-              <div className="mb-4 text-primary">
-                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <div className="text-primary">
+                <div className={cn(
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300",
+                  activeFeature === feature.id ? "bg-primary/20" : "bg-primary/10 group-hover:scale-110"
+                )}>
                   {feature.icon}
                 </div>
               </div>
               
               {/* Feature content */}
-              <h3 className="text-xl font-semibold mb-2 text-text-primary">{feature.title}</h3>
-              <p className="text-text-secondary mb-4">{feature.description}</p>
+              <div>
+                <h3 className="text-lg font-semibold mb-1 text-text-primary">{feature.title}</h3>
+                <p className="text-text-secondary text-sm line-clamp-2">{feature.description}</p>
+              </div>
               
-              {/* Feature image - only show for large and medium cards */}
-              {(feature.size === 'large' || feature.size === 'medium') && (
-                <div className="mt-auto relative w-full overflow-hidden rounded-lg">
-                  <div className={`aspect-video relative bg-gradient-to-br ${feature.color} flex items-center justify-center`}>
-                    <span className="text-text-primary opacity-30 font-bold text-xl">{feature.title}</span>
-                  </div>
-                  
-                  {/* Gradient overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background-card to-transparent opacity-60"></div>
-                </div>
+              {/* Active indicator */}
+              {activeFeature === feature.id && (
+                <motion.div 
+                  className="absolute bottom-3 right-3 w-2 h-2 rounded-full bg-primary"
+                  layoutId="activeIndicator"
+                  transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                />
               )}
               
-              {/* Hover effect */}
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-            </motion.div>
+              {/* Subtle gradient overlay on hover */}
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+                style={{
+                  background: `linear-gradient(135deg, rgba(var(--${feature.id}-start), 0.03), rgba(var(--${feature.id}-end), 0.06))`
+                }}
+              ></div>
+            </motion.button>
           ))}
         </div>
       </div>

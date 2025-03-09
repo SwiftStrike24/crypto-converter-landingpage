@@ -38,8 +38,8 @@ export function useCryptoPrices() {
 
     fetchData();
 
-    // Set up refetching every minute
-    const intervalId = setInterval(fetchData, 60000);
+    // Set up refetching every 5 minutes to reduce API calls
+    const intervalId = setInterval(fetchData, 5 * 60 * 1000);
 
     return () => {
       isMounted = false;

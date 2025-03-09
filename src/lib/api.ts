@@ -61,7 +61,14 @@ export const CRYPTO_METADATA: Record<string, {
     fallbackPrice: 2.53,
     fallbackChange: -3.78
   },
-  'trump': { 
+  'ripple': { 
+    name: 'XRP', 
+    symbol: 'xrp', 
+    color: 'bg-blue-400',
+    fallbackPrice: 0.51,
+    fallbackChange: -2.34
+  },
+  'official-trump': { 
     name: 'Trump', 
     symbol: 'trump', 
     color: 'bg-red-500',
@@ -84,56 +91,210 @@ export const CRYPTO_METADATA: Record<string, {
   }
 };
 
-// In-memory cache for API responses
-const API_CACHE: Record<string, { data: CryptoPrice[]; timestamp: number }> = {};
-const CACHE_DURATION = 60000; // 1 minute
-
-// Rate limiting protection
-const RATE_LIMIT = {
-  lastCall: 0,
-  minInterval: 2000, // 2 seconds between calls
-};
-
-// Safe timestamp function that works on both server and client
-function getTimestamp(): number {
-  return typeof window !== 'undefined' ? Date.now() : 0;
+// Enhanced caching system with localStorage persistence
+interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  expiry: number;
 }
 
+class EnhancedCache {
+  private memoryCache: Record<string, CacheEntry<unknown>> = {};
+  private readonly namespace: string;
+  
+  constructor(namespace: string = 'crypto_converter_cache') {
+    this.namespace = namespace;
+    this.loadFromStorage();
+  }
+  
+  // Get item from cache (memory first, then localStorage)
+  get<T>(key: string): T | null {
+    const now = Date.now();
+    const cacheKey = `${this.namespace}:${key}`;
+    
+    // Try memory cache first
+    if (this.memoryCache[cacheKey] && now < this.memoryCache[cacheKey].expiry) {
+      return this.memoryCache[cacheKey].data as T;
+    }
+    
+    // Try localStorage if available
+    if (typeof window !== 'undefined') {
+      try {
+        const storedItem = localStorage.getItem(cacheKey);
+        if (storedItem) {
+          const parsedItem = JSON.parse(storedItem) as CacheEntry<T>;
+          if (now < parsedItem.expiry) {
+            // Refresh memory cache
+            this.memoryCache[cacheKey] = parsedItem;
+            return parsedItem.data;
+          } else {
+            // Remove expired item
+            localStorage.removeItem(cacheKey);
+          }
+        }
+      } catch (error) {
+        console.warn('Error accessing localStorage:', error);
+      }
+    }
+    
+    return null;
+  }
+  
+  // Set item in cache (both memory and localStorage)
+  set<T>(key: string, data: T, ttlMs: number): void {
+    const now = Date.now();
+    const cacheKey = `${this.namespace}:${key}`;
+    const entry: CacheEntry<T> = {
+      data,
+      timestamp: now,
+      expiry: now + ttlMs
+    };
+    
+    // Update memory cache
+    this.memoryCache[cacheKey] = entry;
+    
+    // Update localStorage if available
+    if (typeof window !== 'undefined') {
+      try {
+        localStorage.setItem(cacheKey, JSON.stringify(entry));
+      } catch (error) {
+        console.warn('Error writing to localStorage:', error);
+      }
+    }
+  }
+  
+  // Load all cache entries from localStorage into memory
+  private loadFromStorage(): void {
+    if (typeof window !== 'undefined') {
+      try {
+        const now = Date.now();
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key?.startsWith(`${this.namespace}:`)) {
+            const value = localStorage.getItem(key);
+            if (value) {
+              const entry = JSON.parse(value) as CacheEntry<unknown>;
+              if (now < entry.expiry) {
+                this.memoryCache[key] = entry;
+              } else {
+                localStorage.removeItem(key);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('Error loading cache from localStorage:', error);
+      }
+    }
+  }
+  
+  // Clear all cache entries
+  clear(): void {
+    this.memoryCache = {};
+    if (typeof window !== 'undefined') {
+      try {
+        for (let i = localStorage.length - 1; i >= 0; i--) {
+          const key = localStorage.key(i);
+          if (key?.startsWith(`${this.namespace}:`)) {
+            localStorage.removeItem(key);
+          }
+        }
+      } catch (error) {
+        console.warn('Error clearing localStorage cache:', error);
+      }
+    }
+  }
+}
+
+// Initialize cache
+const cache = new EnhancedCache();
+
+// Advanced rate limiting with token bucket algorithm
+class TokenBucket {
+  private tokens: number;
+  private lastRefill: number;
+  private readonly capacity: number;
+  private readonly refillRate: number; // tokens per millisecond
+  
+  constructor(capacity: number, refillRatePerSecond: number) {
+    this.capacity = capacity;
+    this.tokens = capacity;
+    this.refillRate = refillRatePerSecond / 1000;
+    this.lastRefill = Date.now();
+  }
+  
+  async consume(tokens: number = 1): Promise<boolean> {
+    this.refill();
+    
+    if (this.tokens >= tokens) {
+      this.tokens -= tokens;
+      return true;
+    }
+    
+    // Calculate wait time to get enough tokens
+    const waitTime = Math.ceil((tokens - this.tokens) / this.refillRate);
+    
+    // If wait time is reasonable, wait and then consume
+    if (waitTime <= 5000) { // Max 5 seconds wait
+      await new Promise(resolve => setTimeout(resolve, waitTime));
+      this.refill();
+      this.tokens -= tokens;
+      return true;
+    }
+    
+    return false;
+  }
+  
+  private refill(): void {
+    const now = Date.now();
+    const elapsedTime = now - this.lastRefill;
+    const newTokens = elapsedTime * this.refillRate;
+    
+    if (newTokens > 0) {
+      this.tokens = Math.min(this.capacity, this.tokens + newTokens);
+      this.lastRefill = now;
+    }
+  }
+}
+
+// Global rate limiter for CoinGecko API (10 requests per minute)
+const rateLimiter = new TokenBucket(10, 10/60);
+
 /**
- * Fetch cryptocurrency prices from CoinGecko API with authentication
- * Optimized for use with React Query
+ * Fetch cryptocurrency prices from CoinGecko API with enhanced caching and error handling
+ * Optimized for free tier usage with persistent caching
  */
 export async function getCryptoPrices(): Promise<CryptoPrice[]> {
   const cacheKey = 'crypto_prices';
+  const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for production use
+  const SHORT_CACHE_DURATION = 30 * 1000; // 30 seconds for error cases
   
-  // Check if we have cached data that's still valid
-  if (API_CACHE[cacheKey] && getTimestamp() - API_CACHE[cacheKey].timestamp < CACHE_DURATION) {
-    return API_CACHE[cacheKey].data;
+  // Check if we have cached data
+  const cachedData = cache.get<CryptoPrice[]>(cacheKey);
+  if (cachedData) {
+    return cachedData;
   }
   
-  // Rate limiting protection
-  const now = getTimestamp();
-  if (now - RATE_LIMIT.lastCall < RATE_LIMIT.minInterval) {
-    // If we're calling too frequently, use cached data or wait
-    if (API_CACHE[cacheKey]) {
-      return API_CACHE[cacheKey].data;
-    }
-    
-    // If no cache available, wait until we can make the call
-    await new Promise(resolve => 
-      setTimeout(resolve, RATE_LIMIT.minInterval - (now - RATE_LIMIT.lastCall))
-    );
+  // Check if we can make an API call (rate limiting)
+  const canMakeRequest = await rateLimiter.consume();
+  if (!canMakeRequest) {
+    console.warn('Rate limit exceeded, using fallback data');
+    const fallbackData = generateFallbackData();
+    cache.set(cacheKey, fallbackData, SHORT_CACHE_DURATION);
+    return fallbackData;
   }
   
-  RATE_LIMIT.lastCall = getTimestamp();
-  
-  // Retry logic
+  // Retry logic with exponential backoff
   const MAX_RETRIES = 3;
   let retries = 0;
+  let lastError: Error | null = null;
   
   while (retries < MAX_RETRIES) {
     try {
-      const apiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY || process.env.COINGECKO_API_KEY;
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+      
+      const apiKey = process.env.NEXT_PUBLIC_COINGECKO_API_KEY || '';
       const headers: HeadersInit = {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
@@ -148,9 +309,12 @@ export async function getCryptoPrices(): Promise<CryptoPrice[]> {
         `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${FEATURED_CRYPTOS.join(',')}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h&locale=en`,
         { 
           headers,
-          next: { revalidate: 60 } // Next.js 15 data revalidation
+          signal: controller.signal,
+          next: { revalidate: 300 } // Next.js 15 data revalidation (5 minutes)
         }
       );
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -159,80 +323,95 @@ export async function getCryptoPrices(): Promise<CryptoPrice[]> {
       
       const data = await response.json() as CryptoPrice[];
       
-      // Ensure we have data for all featured cryptos by adding fallback data for missing ones
-      const resultMap = new Map<string, CryptoPrice>(data.map((item: CryptoPrice) => [item.id, item]));
+      // Process and normalize the data
+      const completeData = processApiResponse(data);
       
-      const completeData: CryptoPrice[] = FEATURED_CRYPTOS.map(id => {
-        // If we have data from the API, use it
-        if (resultMap.has(id)) {
-          return resultMap.get(id) as CryptoPrice;
-        }
-        
-        // Otherwise use fallback data from metadata
-        const metadata = CRYPTO_METADATA[id];
-        if (metadata) {
-          return {
-            id,
-            name: metadata.name,
-            symbol: metadata.symbol,
-            current_price: metadata.fallbackPrice,
-            price_change_percentage_24h: metadata.fallbackChange,
-            image: ''
-          };
-        }
-        
-        // Last resort fallback
-        return {
-          id,
-          name: id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-          symbol: id.substring(0, 3),
-          current_price: 0,
-          price_change_percentage_24h: 0,
-          image: ''
-        };
-      });
-      
-      // Cache the response
-      API_CACHE[cacheKey] = {
-        data: completeData,
-        timestamp: getTimestamp()
-      };
+      // Cache the successful response
+      cache.set(cacheKey, completeData, CACHE_DURATION);
       
       return completeData;
     } catch (error) {
       retries++;
+      lastError = error instanceof Error ? error : new Error(String(error));
       console.error(`Error fetching crypto prices (attempt ${retries}/${MAX_RETRIES}):`, error);
       
       if (retries >= MAX_RETRIES) {
-        // Generate fallback data from CRYPTO_METADATA
-        const fallbackData: CryptoPrice[] = FEATURED_CRYPTOS.map(id => {
-          const metadata = CRYPTO_METADATA[id];
-          return {
-            id,
-            name: metadata?.name || id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
-            symbol: metadata?.symbol || id.substring(0, 3),
-            current_price: metadata?.fallbackPrice || 0,
-            price_change_percentage_24h: metadata?.fallbackChange || 0,
-            image: ''
-          };
-        });
+        // Generate fallback data
+        const fallbackData = generateFallbackData();
         
-        // Cache the fallback data
-        API_CACHE[cacheKey] = {
-          data: fallbackData,
-          timestamp: getTimestamp()
-        };
+        // Cache the fallback data for a shorter duration
+        cache.set(cacheKey, fallbackData, SHORT_CACHE_DURATION);
+        
+        // Log telemetry for monitoring
+        logApiFailure(lastError);
         
         return fallbackData;
       }
       
       // Wait before retrying (exponential backoff)
-      await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retries)));
+      const backoffTime = 1000 * Math.pow(2, retries);
+      await new Promise(resolve => setTimeout(resolve, backoffTime));
     }
   }
   
   // This should never be reached due to the return in the catch block
-  return [];
+  return generateFallbackData();
+}
+
+/**
+ * Process and normalize API response data
+ */
+function processApiResponse(data: CryptoPrice[]): CryptoPrice[] {
+  // Create a map for quick lookups
+  const resultMap = new Map<string, CryptoPrice>(data.map(item => [item.id, item]));
+  
+  // Ensure we have data for all featured cryptos
+  return FEATURED_CRYPTOS.map(id => {
+    // If we have data from the API, use it
+    if (resultMap.has(id)) {
+      return resultMap.get(id) as CryptoPrice;
+    }
+    
+    // Otherwise use fallback data from metadata
+    return createFallbackCrypto(id);
+  });
+}
+
+/**
+ * Generate fallback data for all featured cryptocurrencies
+ */
+function generateFallbackData(): CryptoPrice[] {
+  return FEATURED_CRYPTOS.map(id => createFallbackCrypto(id));
+}
+
+/**
+ * Create fallback data for a single cryptocurrency
+ */
+function createFallbackCrypto(id: string): CryptoPrice {
+  const metadata = CRYPTO_METADATA[id];
+  return {
+    id,
+    name: metadata?.name || id.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+    symbol: metadata?.symbol || id.substring(0, 3),
+    current_price: metadata?.fallbackPrice || 0,
+    price_change_percentage_24h: metadata?.fallbackChange || 0,
+    image: ''
+  };
+}
+
+/**
+ * Log API failures for monitoring
+ */
+function logApiFailure(error: Error): void {
+  // In a production app, you might send this to a monitoring service
+  console.error('CoinGecko API failure:', {
+    timestamp: new Date().toISOString(),
+    error: error.message,
+    stack: error.stack
+  });
+  
+  // You could implement a more sophisticated telemetry system here
+  // For example, sending to an analytics service or server-side logging
 }
 
 /**
@@ -248,13 +427,33 @@ export function convertCrypto(
 }
 
 /**
- * Format currency for display
+ * Format currency with proper formatting
  */
 export function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 6
-  }).format(amount);
+  // Handle different magnitudes appropriately
+  if (amount >= 1000) {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 2
+    });
+  } else if (amount >= 1) {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 4
+    });
+  } else if (amount >= 0.01) {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 6
+    });
+  } else {
+    return amount.toLocaleString('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 8
+    });
+  }
 } 

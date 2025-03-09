@@ -55,8 +55,9 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
   useEffect(() => {
     fetchCryptoPrices();
     
-    // Refresh prices every 30 seconds
-    const intervalId = setInterval(fetchCryptoPrices, 30000);
+    // Refresh prices every 2 minutes instead of 30 seconds
+    // This reduces API calls while keeping data reasonably fresh
+    const intervalId = setInterval(fetchCryptoPrices, 2 * 60 * 1000);
     
     return () => clearInterval(intervalId);
   }, [fetchCryptoPrices]);
@@ -242,7 +243,7 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
       {/* Attribution */}
       <div className="text-center text-zinc-500 text-xs my-2">
         Data provided by <span className="text-purple-500">CoinGecko</span>
-        {!isLoading && <span className="ml-1">• Auto-updates every 30s</span>}
+        {!isLoading && <span className="ml-1">• Auto-updates every 2m</span>}
       </div>
 
       {/* Action Buttons */}

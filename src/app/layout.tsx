@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { initializeApp } from "@/lib/init";
+import { Analytics } from "@vercel/analytics/react"
 
 // Initialize the app during server startup
 if (typeof window === 'undefined') {
@@ -60,6 +61,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <Analytics />
       </body>
     </html>
   );

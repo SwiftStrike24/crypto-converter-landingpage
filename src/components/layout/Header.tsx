@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, smoothScrollTo } from '@/lib/utils';
 import { zIndex } from '@/lib/theme';
 import ClientOnly from '@/components/ClientOnly';
 
@@ -28,6 +28,31 @@ export default function Header() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Handle navigation link clicks with smooth scrolling
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    
+    // Close mobile menu if open
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+    
+    // If href is "/" or "#", scroll to top
+    if (href === "/" || href === "#") {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Extract the element ID from the href (remove the # symbol)
+    const elementId = href.substring(1);
+    
+    // Use our smooth scroll utility
+    smoothScrollTo(elementId);
+  };
+
   return (
     <ClientOnly>
       <header
@@ -42,7 +67,11 @@ export default function Header() {
       >
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2">
+          <Link 
+            href="/" 
+            className="flex items-center gap-2"
+            onClick={(e) => handleNavClick(e, "/")}
+          >
             <div className="relative w-10 h-10">
               <Image
                 src="/images/logo.png"
@@ -65,6 +94,7 @@ export default function Header() {
                   <Link
                     href={link.href}
                     className="text-text-secondary hover:text-text-primary transition-colors"
+                    onClick={(e) => handleNavClick(e, link.href)}
                   >
                     {link.label}
                   </Link>
@@ -75,6 +105,7 @@ export default function Header() {
             <Link
               href="#download"
               className="bg-gradient-to-r from-primary to-primary-light text-white px-6 py-2 rounded-full font-medium hover:shadow-glow transition-all"
+              onClick={(e) => handleNavClick(e, '#download')}
             >
               Download
             </Link>
@@ -111,7 +142,7 @@ export default function Header() {
                     <Link
                       href={link.href}
                       className="text-text-secondary hover:text-text-primary transition-colors block py-2"
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={(e) => handleNavClick(e, link.href)}
                     >
                       {link.label}
                     </Link>
@@ -121,7 +152,7 @@ export default function Header() {
                   <Link
                     href="#download"
                     className="bg-gradient-to-r from-primary to-primary-light text-white px-6 py-3 rounded-full font-medium hover:shadow-glow transition-all block text-center"
-                    onClick={() => setIsMobileMenuOpen(false)}
+                    onClick={(e) => handleNavClick(e, '#download')}
                   >
                     Download
                   </Link>

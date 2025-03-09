@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { getCurrentYear } from '@/lib/utils';
+import { getCurrentYear, smoothScrollTo } from '@/lib/utils';
 import { motion } from 'framer-motion';
 import Image from 'next/image';
 
@@ -81,6 +81,26 @@ const glowVariants = {
 };
 
 export default function Footer() {
+  // Handle navigation link clicks with smooth scrolling
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    
+    // If href is "/" or "#", scroll to top
+    if (href === "/" || href === "#") {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+      return;
+    }
+    
+    // Extract the element ID from the href (remove the # symbol)
+    const elementId = href.substring(1);
+    
+    // Use our smooth scroll utility
+    smoothScrollTo(elementId);
+  };
+
   return (
     <footer className="bg-background-darker pt-12 pb-6 border-t border-gray-800/30 relative overflow-hidden">
       {/* Subtle gradient background effect */}
@@ -99,7 +119,11 @@ export default function Footer() {
             className="flex flex-col gap-2"
             variants={itemVariants}
           >
-            <div className="flex items-center gap-2">
+            <Link 
+              href="/" 
+              className="flex items-center gap-2"
+              onClick={(e) => handleNavClick(e, "/")}
+            >
               <div className="relative w-8 h-8">
                 <Image
                   src="/images/logo.png"
@@ -111,7 +135,7 @@ export default function Footer() {
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">
                 CryptoConverter
               </span>
-            </div>
+            </Link>
             <span className="text-text-secondary text-sm">
               © {getCurrentYear()} All rights reserved.
             </span>
@@ -135,6 +159,7 @@ export default function Footer() {
                       <Link
                         href={link.href}
                         className="text-text-secondary hover:text-primary transition-all duration-300 text-sm flex items-center gap-1 group"
+                        onClick={(e) => handleNavClick(e, link.href)}
                       >
                         <span className="h-px w-0 bg-primary group-hover:w-3 transition-all duration-300"></span>
                         {link.label}

@@ -155,7 +155,10 @@ export default function Download() {
   };
   
   return (
-    <section id="download" className="py-24 relative overflow-hidden">
+    <section 
+      id="download"
+      className="relative py-24 overflow-hidden bg-background"
+    >
       {/* Background elements */}
       <div className="absolute inset-0 bg-background-gradient"></div>
       <div className="absolute inset-0 bg-noise opacity-5"></div>

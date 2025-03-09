@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
+import { cn, smoothScrollTo } from '@/lib/utils';
 import { getCryptoPrices, CryptoPrice, formatCurrency, FEATURED_CRYPTOS, CRYPTO_METADATA } from '@/lib/api';
 import { motion } from "framer-motion";
 import ClientOnly from '@/components/ClientOnly';
@@ -248,6 +248,17 @@ export default function Hero() {
   const getSubtitleTransform = () => `translateY(${scrollY * 0.1}px)`;
   const getAppPreviewTransform = () => `translateY(${scrollY * 0.05}px)`;
   
+  // Handle navigation link clicks with smooth scrolling
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    e.preventDefault();
+    
+    // Extract the element ID from the href (remove the # symbol)
+    const elementId = href.substring(1);
+    
+    // Use our smooth scroll utility
+    smoothScrollTo(elementId);
+  };
+
   return (
     <section
       ref={heroRef}
@@ -319,6 +330,7 @@ export default function Hero() {
                   "hover:shadow-glow transition-all duration-300",
                   "flex items-center justify-center gap-2"
                 )}
+                onClick={(e) => handleNavClick(e, '#download')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -336,6 +348,7 @@ export default function Hero() {
                   "hover:bg-primary/10 transition-all duration-300",
                   "flex items-center justify-center gap-2"
                 )}
+                onClick={(e) => handleNavClick(e, '#features')}
               >
                 <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <polyline points="9 18 15 12 9 6"></polyline>

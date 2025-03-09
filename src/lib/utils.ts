@@ -70,3 +70,30 @@ export function isMobile(): boolean {
 export function getCurrentYear(): number {
   return new Date().getFullYear();
 }
+
+/**
+ * Smooth scroll to an element by ID with optional offset
+ * @param elementId - The ID of the element to scroll to (without the # symbol)
+ * @param offset - Optional offset from the top (useful for fixed headers)
+ */
+export function smoothScrollTo(elementId: string, offset: number = 80): void {
+  // Only run on client side
+  if (typeof window === 'undefined') return;
+  
+  // Find the element
+  const element = document.getElementById(elementId);
+  if (!element) {
+    console.warn(`Element with ID "${elementId}" not found.`);
+    return;
+  }
+  
+  // Get the element's position
+  const elementPosition = element.getBoundingClientRect().top;
+  const offsetPosition = elementPosition + window.scrollY - offset;
+  
+  // Use modern browser APIs for smooth scrolling
+  window.scrollTo({
+    top: offsetPosition,
+    behavior: 'smooth'
+  });
+}

@@ -1,0 +1,10 @@
+.git
+.github
+node_modules
+README.md
+.gitignore
+*.log
+.env.local
+.env.development
+.env.development.local
+.next/cache 

@@ -1,6 +1,8 @@
+// public\robots.txt
+
 # Allow all crawlers
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://crypto-converter-landingpage.vercel.app/sitemap.xml 
+Sitemap: https://cryptovertx.com/sitemap.xml

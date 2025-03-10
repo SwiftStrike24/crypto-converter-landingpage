@@ -20,30 +20,30 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Crypto Converter | Real-Time Cryptocurrency Conversion",
+  title: "CryptoVertX | Real-Time Cryptocurrency Conversion",
   description: "A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking. Convert between multiple cryptocurrencies with live price updates.",
-  keywords: "crypto converter, cryptocurrency, bitcoin, ethereum, crypto tracking, desktop app",
-  authors: [{ name: "Crypto Converter Team" }],
-  creator: "Crypto Converter Team",
+  keywords: "cryptovertx, cryptocurrency, bitcoin, ethereum, crypto tracking, desktop app",
+  authors: [{ name: "CryptoVertX Team" }],
+  creator: "CryptoVertX Team",
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://crypto-converter.app",
-    title: "Crypto Converter | Real-Time Cryptocurrency Conversion",
+    url: "https://cryptovertx.com",
+    title: "CryptoVertX | Real-Time Cryptocurrency Conversion",
     description: "A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking.",
-    siteName: "Crypto Converter",
+    siteName: "CryptoVertX",
     images: [
       {
         url: "/images/logo.png",
         width: 1200,
         height: 1200,
-        alt: "Crypto Converter App",
+        alt: "CryptoVertX App",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Crypto Converter | Real-Time Cryptocurrency Conversion",
+    title: "CryptoVertX | Real-Time Cryptocurrency Conversion",
     description: "A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking.",
     images: ["/images/logo.png"],
   },

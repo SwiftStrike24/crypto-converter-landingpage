@@ -127,13 +127,13 @@ export default function Footer() {
               <div className="relative w-8 h-8">
                 <Image
                   src="/images/logo.png"
-                  alt="Crypto Converter Logo"
+                  alt="CryptoVertX Logo"
                   fill
                   className="object-contain"
                 />
               </div>
               <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">
-                CryptoConverter
+                CryptoVertX
               </span>
             </Link>
             <span className="text-text-secondary text-sm">

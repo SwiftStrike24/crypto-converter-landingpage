@@ -75,14 +75,14 @@ export default function Header() {
             <div className="relative w-10 h-10">
               <Image
                 src="/images/logo.png"
-                alt="Crypto Converter Logo"
+                alt="CryptoVertX Logo"
                 fill
                 className="object-contain"
                 priority
               />
             </div>
             <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary-light to-primary">
-              CryptoConverter
+              CryptoVertX
             </span>
           </Link>
 

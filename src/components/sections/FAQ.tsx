@@ -12,28 +12,28 @@ import {
 const faqItems = [
   {
     id: 'what-is',
-    question: 'What is Crypto Converter?',
-    answer: 'Crypto Converter is a sleek and powerful desktop application that lets you convert between cryptocurrencies in real-time. It features a modern, easy-to-use interface with smooth animations.',
+    question: 'What is CryptoVertX?',
+    answer: 'CryptoVertX is a sleek and powerful desktop application that lets you convert between cryptocurrencies in real-time. It features a modern, easy-to-use interface with smooth animations.',
   },
   {
     id: 'platforms',
-    question: 'Which platforms is Crypto Converter available on?',
-    answer: 'Crypto Converter is available for Windows and macOS computers, providing the same great experience on both platforms.',
+    question: 'Which platforms is CryptoVertX available on?',
+    answer: 'CryptoVertX is available for Windows and macOS computers, providing the same great experience on both platforms.',
   },
   {
     id: 'cryptocurrencies',
     question: 'How many cryptocurrencies does it support?',
-    answer: 'Crypto Converter supports multiple popular cryptocurrencies with real-time price updates. You can easily search and add new cryptocurrencies to track based on your interests.',
+    answer: 'CryptoVertX supports multiple popular cryptocurrencies with real-time price updates. You can easily search and add new cryptocurrencies to track based on your interests.',
   },
   {
     id: 'features',
-    question: 'What can I do with Crypto Converter?',
-    answer: 'With Crypto Converter, you can convert between cryptocurrencies in real-time, view detailed price charts, track multiple currencies at once, and quickly access the app with a keyboard shortcut. The app stays out of your way when minimized but is always ready when you need it.',
+    question: 'What can I do with CryptoVertX?',
+    answer: 'With CryptoVertX, you can convert between cryptocurrencies in real-time, view detailed price charts, track multiple currencies at once, and quickly access the app with a keyboard shortcut. The app stays out of your way when minimized but is always ready when you need it.',
   },
   {
     id: 'ease-of-use',
-    question: 'Is Crypto Converter easy to use?',
-    answer: 'Absolutely! Crypto Converter is designed to be intuitive and user-friendly. The clean interface makes it easy to convert currencies, view charts, and track your favorite cryptocurrencies without any technical knowledge.',
+    question: 'Is CryptoVertX easy to use?',
+    answer: 'Absolutely! CryptoVertX is designed to be intuitive and user-friendly. The clean interface makes it easy to convert currencies, view charts, and track your favorite cryptocurrencies without any technical knowledge.',
   },
   {
     id: 'shortcuts',
@@ -42,13 +42,13 @@ const faqItems = [
   },
   {
     id: 'data-privacy',
-    question: 'How does Crypto Converter handle my data?',
-    answer: 'Your privacy is important to us. Crypto Converter stores all your data locally on your device. We don\'t collect or store any personal information on our servers. The app only connects to cryptocurrency services to fetch the latest price data.',
+    question: 'How does CryptoVertX handle my data?',
+    answer: 'Your privacy is important to us. CryptoVertX stores all your data locally on your device. We don\'t collect or store any personal information on our servers. The app only connects to cryptocurrency services to fetch the latest price data.',
   },
   {
     id: 'api-source',
     question: 'Where does the price data come from?',
-    answer: 'Crypto Converter uses data from trusted cryptocurrency services to ensure you always have accurate and up-to-date price information for making informed decisions.',
+    answer: 'CryptoVertX uses data from trusted cryptocurrency services to ensure you always have accurate and up-to-date price information for making informed decisions.',
   },
 ];
 
@@ -78,7 +78,7 @@ export default function FAQ() {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
-            Everything you need to know about Crypto Converter
+            Everything you need to know about CryptoVertX
           </motion.p>
         </div>
         

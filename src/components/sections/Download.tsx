@@ -200,10 +200,10 @@ export default function Download() {
           transition={{ duration: 0.6 }}
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-text-primary to-primary">
-            Download Crypto Converter
+            Download CryptoVertX
           </h2>
           <p className="text-text-secondary max-w-2xl mx-auto">
-            Get started with Crypto Converter today. Available for Windows and macOS.
+            Get started with CryptoVertX today.
           </p>
         </motion.div>
         
@@ -226,7 +226,7 @@ export default function Download() {
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <div className="text-text-secondary text-xs font-medium ml-2">Crypto Converter</div>
+                  <div className="text-text-secondary text-xs font-medium ml-2">CryptoVertX</div>
                 </div>
                 
                 {/* Replace static app preview with interactive ConverterDemo */}

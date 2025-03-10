@@ -312,7 +312,7 @@ export default function Hero() {
                 transition={{ duration: 0.6, delay: 0.2 }}
                 style={{ transform: getSubtitleTransform() }}
               >
-                A sleek and powerful desktop application for real-time cryptocurrency conversion and tracking. Convert between multiple cryptocurrencies with live price updates.
+                CryptoVertX is a sleek and powerful desktop application for real-time cryptocurrency conversion and tracking. Convert between multiple cryptocurrencies with live price updates.
               </motion.p>
             </ClientOnly>
             
@@ -418,7 +418,7 @@ export default function Hero() {
                     <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
                     <div className="w-3 h-3 rounded-full bg-green-500"></div>
                   </div>
-                  <div className="text-text-secondary text-xs font-medium ml-2">Crypto Converter</div>
+                  <div className="text-text-secondary text-xs font-medium ml-2">CryptoVertX</div>
                 </div>
 
                 {/* Replace placeholder with ConverterDemo component */}

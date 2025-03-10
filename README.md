@@ -1,6 +1,6 @@
-# Crypto Converter Landing Page
+# CryptoVertX Landing Page
 
-A modern, responsive landing page for Crypto Converter - a desktop app that converts between cryptocurrencies with real-time price updates.
+A modern, responsive landing page for CryptoVertX - a desktop app that converts between cryptocurrencies with real-time price updates.
 
 ## Features
 
@@ -31,7 +31,7 @@ A modern, responsive landing page for Crypto Converter - a desktop app that conv
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/crypto-converter-landingpage.git
+git clone https://github.com/SwiftStrike24/crypto-converter-landingpage.git
 cd crypto-converter-landingpage
 ```
 
@@ -94,11 +94,11 @@ src/
 
 The landing page uses Cloudflare R2 for storing and serving application downloads. The setup includes:
 
-1. A bucket named `cryptoconverter-downloads` with the following structure:
-   - `latest/CryptoConverter-Setup-1.0.0.exe` - Latest Windows installer
-   - `versions/1.0.0/CryptoConverter-Setup-1.0.0.exe` - Versioned Windows installer
-   - `latest/CryptoConverter-Mac-1.0.0.dmg` - Latest macOS installer
-   - `versions/1.0.0/CryptoConverter-Mac-1.0.0.dmg` - Versioned macOS installer
+1. A bucket named `cryptovertx-downloads` with the following structure:
+   - `latest/CryptoVertX-Setup-1.0.0.exe` - Latest Windows installer
+   - `versions/1.0.0/CryptoVertX-Setup-1.0.0.exe` - Versioned Windows installer
+   - `latest/CryptoVertX-Mac-1.0.0.dmg` - Latest macOS installer
+   - `versions/1.0.0/CryptoVertX-Mac-1.0.0.dmg` - Versioned macOS installer
 
 2. API routes for:
    - Fetching file metadata (`/api/files`)
@@ -128,7 +128,7 @@ npm install -g wrangler
 wrangler login
 
 # Apply CORS configuration
-wrangler r2 bucket cors put cryptoconverter-downloads --config cors.json
+wrangler r2 bucket cors put cryptovertx-downloads --config cors.json
 ```
 
 ### Troubleshooting

@@ -429,7 +429,7 @@ export default function Hero() {
 
               {/* Floating badge */}
               <motion.div
-                className="absolute -bottom-4 -right-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-4 py-2 rounded-full text-sm font-medium shadow-lg border border-purple-500/30 backdrop-blur-sm overflow-hidden"
+                className="absolute bottom-0 sm:-bottom-2 md:-bottom-4 right-0 sm:-right-2 md:-right-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-full text-xs sm:text-sm font-medium shadow-lg border border-purple-500/30 backdrop-blur-sm overflow-hidden transform translate-y-1/2 sm:translate-y-0"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 }}
@@ -452,11 +452,11 @@ export default function Hero() {
                   }}
                 />
                 
-                <div className="flex items-center gap-2 relative z-10">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse">
+                <div className="flex items-center gap-1 sm:gap-2 relative z-10">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-pulse hidden xs:inline-block sm:w-4 sm:h-4 md:w-[16px] md:h-[16px]">
                     <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"></path>
                   </svg>
-                  <span className="font-semibold">Smart Analysis</span>
+                  <span className="font-semibold whitespace-nowrap">Smart Analysis</span>
                 </div>
               </motion.div>
             </motion.div>

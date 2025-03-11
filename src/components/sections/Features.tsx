@@ -161,7 +161,7 @@ export default function Features() {
             <motion.button
               key={feature.id}
               className={cn(
-                "group relative h-[180px] rounded-xl border transition-all duration-300 p-6 flex flex-col items-start justify-between text-left",
+                "group relative h-[180px] rounded-xl border transition-all duration-300 p-6 flex flex-col items-start justify-between text-left overflow-hidden",
                 activeFeature === feature.id 
                   ? "border-primary/50 bg-primary/5" 
                   : "border-gray-800/30 bg-background-card/30 hover:bg-background-card/50"
@@ -174,44 +174,105 @@ export default function Features() {
               whileHover={{ 
                 y: -5, 
                 boxShadow: "0 15px 30px -10px rgba(var(--primary), 0.15)",
-                transition: { duration: 0.2 } 
+                scale: 1.02,
+                transition: { 
+                  duration: 0.3,
+                  type: "spring",
+                  stiffness: 400,
+                  damping: 15
+                } 
               }}
             >
-              {/* Feature icon */}
-              <div className="text-primary">
+              {/* Animated corner accent */}
+              <div className="absolute -top-10 -right-10 w-20 h-20 bg-gradient-to-br from-primary/20 to-primary-light/30 rounded-full transform scale-0 group-hover:scale-100 transition-transform duration-500 ease-out"></div>
+              
+              {/* Animated border glow */}
+              <div className="absolute inset-0 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none z-0"
+                style={{
+                  boxShadow: `inset 0 0 0 1px rgba(var(--${feature.id}-start), 0.3)`
+                }}
+              ></div>
+              
+              {/* Feature icon with animated background */}
+              <div className="text-primary relative z-10">
                 <div className={cn(
-                  "w-10 h-10 rounded-lg flex items-center justify-center transition-transform duration-300",
-                  activeFeature === feature.id ? "bg-primary/20" : "bg-primary/10 group-hover:scale-110"
+                  "w-10 h-10 rounded-lg flex items-center justify-center transition-all duration-500 relative overflow-hidden",
+                  activeFeature === feature.id ? "bg-primary/20" : "bg-primary/10 group-hover:scale-110 group-hover:rotate-3"
                 )}>
-                  {feature.icon}
+                  {/* Animated icon background */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-primary/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
+                  
+                  {/* Icon */}
+                  <div className="relative z-10 group-hover:scale-110 transition-transform duration-300">
+                    {feature.icon}
+                  </div>
                 </div>
               </div>
               
-              {/* Feature content */}
-              <div>
-                <h3 className="text-lg font-semibold mb-1 text-text-primary">{feature.title}</h3>
-                <p className="text-text-secondary text-sm line-clamp-2">{feature.description}</p>
+              {/* Feature content with animated lift */}
+              <div className="relative z-10 transform group-hover:translate-y-[-2px] transition-transform duration-300">
+                <h3 className="text-lg font-semibold mb-1 text-text-primary group-hover:text-primary transition-colors duration-300">{feature.title}</h3>
+                <p className="text-text-secondary text-sm line-clamp-2 group-hover:line-clamp-none transition-all duration-500">{feature.description}</p>
               </div>
               
-              {/* Active indicator */}
+              {/* Animated particles */}
+              <div className="absolute bottom-2 left-2 w-1 h-1 rounded-full bg-primary/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-float-slow"></div>
+              <div className="absolute bottom-3 left-6 w-1 h-1 rounded-full bg-primary-light/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 group-hover:animate-float-medium"></div>
+              
+              {/* Active indicator with pulse animation */}
               {activeFeature === feature.id && (
                 <motion.div 
                   className="absolute bottom-3 right-3 w-2 h-2 rounded-full bg-primary"
                   layoutId="activeIndicator"
                   transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                />
+                >
+                  <span className="absolute inset-0 rounded-full bg-primary/50 animate-ping"></span>
+                </motion.div>
               )}
               
-              {/* Subtle gradient overlay on hover */}
-              <div className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"
+              {/* Enhanced gradient overlay on hover with directional movement */}
+              <div 
+                className="absolute inset-0 rounded-xl bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-all duration-500 pointer-events-none z-0 group-hover:bg-position-100"
                 style={{
-                  background: `linear-gradient(135deg, rgba(var(--${feature.id}-start), 0.03), rgba(var(--${feature.id}-end), 0.06))`
+                  background: `linear-gradient(135deg, rgba(var(--${feature.id}-start), 0.03), rgba(var(--${feature.id}-end), 0.08))`,
+                  backgroundSize: '200% 200%',
+                  backgroundPosition: '0% 0%'
                 }}
               ></div>
             </motion.button>
           ))}
         </div>
       </div>
+      
+      {/* Add these animations to your global CSS or define them here */}
+      <style jsx global>{`
+        @keyframes float-slow {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-5px) translateX(3px); }
+          50% { transform: translateY(-2px) translateX(5px); }
+          75% { transform: translateY(-4px) translateX(-2px); }
+        }
+        
+        @keyframes float-medium {
+          0%, 100% { transform: translateY(0) translateX(0); }
+          25% { transform: translateY(-3px) translateX(-3px); }
+          50% { transform: translateY(-6px) translateX(2px); }
+          75% { transform: translateY(-2px) translateX(4px); }
+        }
+        
+        .animate-float-slow {
+          animation: float-slow 4s ease-in-out infinite;
+        }
+        
+        .animate-float-medium {
+          animation: float-medium 3s ease-in-out infinite;
+        }
+        
+        .group:hover .bg-position-100 {
+          background-position: 100% 100% !important;
+          transition: background-position 2s ease-in-out !important;
+        }
+      `}</style>
     </section>
   );
 } 

@@ -147,20 +147,20 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
 
   return (
     <div className={cn(
-      "flex flex-col gap-4 bg-zinc-900 p-5 rounded-lg max-w-md mx-auto shadow-lg border border-zinc-800",
+      "flex flex-col gap-3 sm:gap-4 bg-zinc-900 p-4 sm:p-5 rounded-lg w-full max-w-[95%] sm:max-w-md mx-auto shadow-lg border border-zinc-800 transition-all",
       className
     )}>
       {/* Header */}
       <div className="flex justify-between items-center">
-        <div className="flex gap-2">
+        <div className="flex gap-1.5 sm:gap-2">
           <button 
-            className="text-white bg-zinc-800 hover:bg-zinc-700 w-8 h-8 rounded-full flex items-center justify-center"
+            className="text-white bg-zinc-800 hover:bg-zinc-700 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center touch-manipulation"
             aria-label="Add favorite"
           >
             +
           </button>
           <button 
-            className="text-white bg-zinc-800 hover:bg-zinc-700 w-8 h-8 rounded-full flex items-center justify-center"
+            className="text-white bg-zinc-800 hover:bg-zinc-700 w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center touch-manipulation"
             aria-label="Clear"
             onClick={() => {
               setFromAmount('');
@@ -170,15 +170,15 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
             🗑️
           </button>
         </div>
-        <div className="text-white font-medium text-lg">
+        <div className="text-white font-medium text-base sm:text-lg">
           {isLoading ? (
-            <span className="inline-block h-5 w-16 bg-zinc-800 animate-pulse rounded"></span>
+            <span className="inline-block h-4 sm:h-5 w-12 sm:w-16 bg-zinc-800 animate-pulse rounded"></span>
           ) : (
             formatCurrency(currentPrice)
           )}
         </div>
         <button 
-          className="text-red-500 bg-transparent border-none w-8 h-8 flex items-center justify-center"
+          className="text-red-500 bg-transparent border-none w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center touch-manipulation"
           onClick={handleSwapCurrencies}
           aria-label="Swap currencies"
         >
@@ -194,18 +194,19 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
       )}
 
       {/* From Currency Input */}
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
         <input
           type="text"
+          inputMode="decimal"
           value={fromAmount}
           onChange={handleFromAmountChange}
           placeholder="Enter amount"
-          className="flex-1 p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="flex-1 p-2.5 sm:p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
         />
         <select
           value={fromCurrency}
           onChange={handleFromCurrencyChange}
-          className="p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
+          className="p-2.5 sm:p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer text-base min-w-[80px] sm:min-w-[unset]"
           aria-label="From currency"
         >
           <option value="BTC">BTC</option>
@@ -221,18 +222,19 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
       </div>
 
       {/* To Currency Input */}
-      <div className="flex gap-2 items-center">
+      <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
         <input
           type="text"
+          inputMode="decimal"
           value={toAmount}
           onChange={handleToAmountChange}
           placeholder="Converted amount"
-          className="flex-1 p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+          className="flex-1 p-2.5 sm:p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent text-base"
         />
         <select
           value={toCurrency}
           onChange={handleToCurrencyChange}
-          className="p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer"
+          className="p-2.5 sm:p-3 bg-zinc-800 border border-zinc-700 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent cursor-pointer text-base min-w-[80px] sm:min-w-[unset]"
           aria-label="To currency"
           disabled={fromCurrency !== 'USD'} // Only enable if from is USD
         >
@@ -241,24 +243,24 @@ const ConverterDemo: React.FC<ConverterDemoProps> = ({ className }) => {
       </div>
 
       {/* Attribution */}
-      <div className="text-center text-zinc-500 text-xs my-2">
+      <div className="text-center text-zinc-500 text-xs my-1 sm:my-2">
         Data provided by <span className="text-purple-500">CoinGecko</span>
         {!isLoading && <span className="ml-1">• Auto-updates every 2m</span>}
       </div>
 
       {/* Action Buttons */}
-      <div className="flex justify-between mt-2">
+      <div className="flex justify-between mt-1 sm:mt-2">
         <button 
-          className="w-12 h-12 rounded-full bg-purple-900/20 hover:bg-purple-900/30 flex items-center justify-center text-purple-500 transition-colors"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-900/20 hover:bg-purple-900/30 flex items-center justify-center text-purple-500 transition-colors touch-manipulation"
           aria-label="Search"
         >
-          <span className="text-xl">🔍</span>
+          <span className="text-lg sm:text-xl">🔍</span>
         </button>
         <button 
-          className="w-12 h-12 rounded-full bg-purple-900/20 hover:bg-purple-900/30 flex items-center justify-center text-purple-500 transition-colors"
+          className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-purple-900/20 hover:bg-purple-900/30 flex items-center justify-center text-purple-500 transition-colors touch-manipulation"
           aria-label="Chart"
         >
-          <span className="text-xl">📈</span>
+          <span className="text-lg sm:text-xl">📈</span>
         </button>
       </div>
     </div>

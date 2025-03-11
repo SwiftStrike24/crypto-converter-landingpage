@@ -41,7 +41,11 @@ npm install
 ```
 
 3. Set up environment variables:
-   - Create a `.env.local` file with the following variables:
+   - Copy the `.env.example` file to `.env.local`:
+   ```bash
+   cp .env.example .env.local
+   ```
+   - Edit the `.env.local` file with your Cloudflare R2 credentials:
    ```
    # Cloudflare R2 credentials
    CLOUDFLARE_ACCOUNT_ID=your_account_id
@@ -49,6 +53,7 @@ npm install
    R2_SECRET_ACCESS_KEY=your_secret_access_key
    R2_ENDPOINT=https://your_account_id.r2.cloudflarestorage.com
    R2_PUBLIC_URL=https://pub-your_account_id.r2.dev
+   NEXT_PUBLIC_R2_PUBLIC_URL=https://pub-your_account_id.r2.dev
    ```
 
 4. Run the development server:
@@ -84,6 +89,7 @@ src/
 │   ├── animations.ts        # Animation utilities
 │   ├── api.ts               # API utilities
 │   ├── r2.ts                # Cloudflare R2 utilities
+│   ├── env.ts               # Environment configuration
 │   ├── theme.ts             # Theme configuration
 │   ├── utils.ts             # General utilities
 ├── public/                  # Static assets
@@ -108,10 +114,15 @@ The landing page uses Cloudflare R2 for storing and serving application download
 
 To set up your R2 credentials:
 
-```bash
-# Generate new R2 credentials
-npm run generate-r2-credentials
+1. Create a Cloudflare R2 bucket named `cryptovertx-downloads`
+2. Create an API token with the following permissions:
+   - Object Read (required for listing and downloading files)
+   - Object Write (optional, only needed if you plan to upload files)
+   - Bucket Read (required for listing buckets and checking CORS)
+   - Bucket Write (optional, only needed if you plan to modify bucket settings)
+3. Add your credentials to the `.env.local` file
 
+```bash
 # Test your R2 connection
 npm run test-r2
 ```

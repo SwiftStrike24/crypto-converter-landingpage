@@ -11,6 +11,7 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 import React from 'react';
+import { formatFileSize } from '@/lib/utils';
 
 // Platform data
 const platforms = [
@@ -42,7 +43,12 @@ const platforms = [
 // Default version information (will be updated from API)
 const defaultVersionInfo = {
   current: '1.0.0',
-  releaseDate: 'March 8, 2025',
+  releaseDate: new Intl.DateTimeFormat('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date()),
+  lastChecked: new Date().toISOString(),
 };
 
 // Type for file metadata
@@ -68,6 +74,16 @@ export default function Download() {
   const [retryCount, setRetryCount] = useState(0);
   const [retryTimeout, setRetryTimeout] = useState<NodeJS.Timeout | null>(null);
   const [showNotification, setShowNotification] = useState(false);
+  const [lastChecked, setLastChecked] = useState<string>(defaultVersionInfo.lastChecked);
+  const [autoRefreshInterval, setAutoRefreshInterval] = useState<NodeJS.Timeout | null>(null);
+  const [previousVersion, setPreviousVersion] = useState<string | null>(null);
+  const [isNewVersion, setIsNewVersion] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  
+  // Set isClient to true when component mounts (client-side only)
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
   
   // Handle macOS click to show notification
   const handleMacClick = () => {
@@ -77,6 +93,8 @@ export default function Download() {
   
   // Fetch file metadata when platform changes or on retry
   useEffect(() => {
+    if (!isClient) return;
+    
     async function fetchFileMetadata() {
       // Skip API call if the platform is disabled (coming soon)
       const platformData = platforms.find(p => p.id === selectedPlatform);
@@ -92,7 +110,9 @@ export default function Download() {
       
       try {
         console.log(`Fetching file metadata for ${selectedPlatform}...`);
-        const response = await fetch(`/api/files?platform=${selectedPlatform}`);
+        // Add cache-busting parameter to ensure we always get fresh data
+        const timestamp = new Date().getTime();
+        const response = await fetch(`/api/files?platform=${selectedPlatform}&t=${timestamp}`);
         
         if (!response.ok) {
           const errorData = await response.json() as ApiError;
@@ -101,7 +121,23 @@ export default function Download() {
         
         const data = await response.json();
         console.log(`File metadata received:`, data);
+        
+        // Check if this is a new version
+        if (previousVersion && data.version !== previousVersion) {
+          console.log(`New version detected: ${data.version} (previous: ${previousVersion})`);
+          setIsNewVersion(true);
+          
+          // Reset the new version indicator after 30 seconds
+          setTimeout(() => {
+            setIsNewVersion(false);
+          }, 30000);
+        }
+        
+        // Update previous version for future comparisons
+        setPreviousVersion(data.version);
+        
         setFileMetadata(data);
+        setLastChecked(new Date().toISOString());
       } catch (err) {
         console.error('Error fetching file metadata:', err);
         setError(err instanceof Error ? err.message : 'Failed to load download information. Please try again later.');
@@ -128,7 +164,7 @@ export default function Download() {
         clearTimeout(retryTimeout);
       }
     };
-  }, [selectedPlatform, retryCount, retryTimeout]);
+  }, [selectedPlatform, retryCount, retryTimeout, previousVersion, isClient]);
   
   // Function to handle manual retry
   const handleRetry = () => {
@@ -144,7 +180,7 @@ export default function Download() {
         `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${encodeURIComponent(fileMetadata.key)}` : 
         `/api/download?key=${encodeURIComponent(fileMetadata.key)}`) : 
       '#',
-    size: fileMetadata?.size || '24.5 MB',
+    size: fileMetadata?.size || formatFileSize(98311502), // 98.31 MB
   };
   
   // Prepare version info
@@ -152,7 +188,54 @@ export default function Download() {
     ...defaultVersionInfo,
     current: fileMetadata?.version || defaultVersionInfo.current,
     releaseDate: fileMetadata?.releaseDate || defaultVersionInfo.releaseDate,
+    lastChecked,
   };
+  
+  // Set up periodic check for updates (every 5 minutes)
+  useEffect(() => {
+    if (!isClient) return;
+    
+    // Only set up auto-refresh if not disabled
+    const interval = setInterval(() => {
+      console.log('Auto-refreshing file metadata...');
+      setRetryCount(prev => prev + 1);
+    }, 5 * 60 * 1000); // 5 minutes
+    
+    setAutoRefreshInterval(interval);
+    
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isClient]);
+  
+  // Clean up intervals on unmount
+  useEffect(() => {
+    if (!isClient) return;
+    
+    return () => {
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+      if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+      }
+    };
+  }, [retryTimeout, autoRefreshInterval, isClient]);
+  
+  // Update the file size display when the component mounts and when the file metadata changes
+  useEffect(() => {
+    if (!isClient || !fileMetadata) return;
+    
+    // Log file size information for debugging
+    console.log(`File size from API: ${fileMetadata.size}`);
+    
+    // If the file size is different from what's displayed, update it
+    if (selectedPlatformData.size !== fileMetadata.size) {
+      console.log(`Updating file size from ${selectedPlatformData.size} to ${fileMetadata.size}`);
+    }
+  }, [fileMetadata, isClient, selectedPlatformData.size]);
   
   return (
     <section 
@@ -337,9 +420,46 @@ export default function Download() {
                   <h3 className="text-xl font-bold text-text-primary">
                     Crypto Converter for {selectedPlatformData.name}
                   </h3>
-                  <span className="text-sm text-text-secondary bg-background-darker px-3 py-1 rounded-full">
-                    v{versionInfo.current}
-                  </span>
+                  <div className="flex flex-col items-end">
+                    <div className="flex items-center gap-2">
+                      <motion.span
+                        className={cn(
+                          "text-sm px-3 py-1 rounded-full",
+                          isNewVersion 
+                            ? "bg-green-500/20 text-green-400 border border-green-500/30" 
+                            : "bg-background-darker text-text-secondary"
+                        )}
+                        animate={isNewVersion ? {
+                          scale: [1, 1.05, 1],
+                          transition: { 
+                            repeat: 3,
+                            duration: 0.6
+                          }
+                        } : {}}
+                      >
+                        v{versionInfo.current}
+                        {isNewVersion && (
+                          <span className="ml-1 inline-flex items-center">
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              width="12" 
+                              height="12" 
+                              viewBox="0 0 24 24" 
+                              fill="none" 
+                              stroke="currentColor" 
+                              strokeWidth="2" 
+                              strokeLinecap="round" 
+                              strokeLinejoin="round"
+                              className="mr-1"
+                            >
+                              <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>
+                            New!
+                          </span>
+                        )}
+                      </motion.span>
+                    </div>
+                  </div>
                 </div>
                 
                 <div className="flex items-center gap-4 text-sm text-text-secondary mb-6">

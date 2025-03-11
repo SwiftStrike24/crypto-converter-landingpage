@@ -97,3 +97,23 @@ export function smoothScrollTo(elementId: string, offset: number = 80): void {
     behavior: 'smooth'
   });
 }
+
+/**
+ * Format file size in human-readable format
+ * @param sizeInBytes File size in bytes
+ * @returns Formatted file size string (e.g., "98.31 MB")
+ */
+export function formatFileSize(sizeInBytes: number): string {
+  if (sizeInBytes === 0) return '0 B';
+  
+  // Use 1000-based units for display (decimal, not binary)
+  if (sizeInBytes < 1000) {
+    return `${sizeInBytes} B`;
+  } else if (sizeInBytes < 1000 * 1000) {
+    return `${(sizeInBytes / 1000).toFixed(2)} KB`;
+  } else if (sizeInBytes < 1000 * 1000 * 1000) {
+    return `${(sizeInBytes / (1000 * 1000)).toFixed(2)} MB`;
+  } else {
+    return `${(sizeInBytes / (1000 * 1000 * 1000)).toFixed(2)} GB`;
+  }
+}

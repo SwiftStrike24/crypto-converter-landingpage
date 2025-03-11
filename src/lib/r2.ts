@@ -8,10 +8,16 @@ interface AWSError extends Error {
   $fault?: string;
 }
 
-// Validate environment variables
-const { isValid, missingVars } = validateEnv();
-if (!isValid) {
-  console.error('❌ R2 client initialization failed due to missing environment variables:', missingVars.join(', '));
+// Check if we're running on the client side
+const isClient = typeof window !== 'undefined';
+
+// Only validate environment variables on the server side
+if (!isClient) {
+  // Validate environment variables
+  const { isValid, missingVars } = validateEnv();
+  if (!isValid) {
+    console.error('❌ R2 client initialization failed due to missing environment variables:', missingVars.join(', '));
+  }
 }
 
 // Bucket name
@@ -22,6 +28,15 @@ export const BUCKET_NAME = 'cryptoconverter-downloads';
  * Following Cloudflare R2 best practices as of 2025
  */
 export const createR2Client = () => {
+  // Skip client creation on the client side
+  if (isClient) {
+    console.log('R2 client not created on client side');
+    // Return a dummy client for client-side
+    return {
+      send: () => Promise.reject(new Error('R2 operations can only be performed on the server')),
+    } as unknown as S3Client;
+  }
+
   // Ensure we have all required environment variables
   if (!process.env.R2_ACCESS_KEY_ID || !process.env.R2_SECRET_ACCESS_KEY || !process.env.CLOUDFLARE_ACCOUNT_ID) {
     console.error('❌ Missing required R2 credentials');
@@ -65,7 +80,14 @@ export const r2Client = createR2Client();
  */
 export async function getFileMetadata(prefix: string) {
   try {
+    // Skip R2 operations on the client side
+    if (isClient) {
+      console.log('R2 operations can only be performed on the server');
+      return [];
+    }
+    
     // Validate environment before proceeding
+    const { isValid } = validateEnv();
     if (!isValid) {
       throw new Error('R2 client not properly configured. Missing environment variables.');
     }
@@ -120,23 +142,23 @@ export async function getDownloadUrl(key: string) {
   }
 }
 
-// Get file size in human-readable format
-export function formatFileSize(sizeInBytes: number): string {
-  if (sizeInBytes < 1024) {
-    return `${sizeInBytes} B`;
-  } else if (sizeInBytes < 1024 * 1024) {
-    return `${(sizeInBytes / 1024).toFixed(1)} KB`;
-  } else if (sizeInBytes < 1024 * 1024 * 1024) {
-    return `${(sizeInBytes / (1024 * 1024)).toFixed(1)} MB`;
-  } else {
-    return `${(sizeInBytes / (1024 * 1024 * 1024)).toFixed(1)} GB`;
-  }
-}
-
 // Extract version from filename
 export function extractVersionFromFilename(filename: string): string {
-  const match = filename.match(/Setup-(\d+\.\d+\.\d+)/i);
-  return match ? match[1] : '1.0.0'; // Default to 1.0.0 if not found
+  // Try different patterns to extract version
+  // Pattern 1: Setup-X.Y.Z or Mac-X.Y.Z
+  const setupMatch = filename.match(/(?:Setup|Mac)-(\d+\.\d+\.\d+)/i);
+  if (setupMatch) return setupMatch[1];
+  
+  // Pattern 2: vX.Y.Z
+  const vMatch = filename.match(/v(\d+\.\d+\.\d+)/i);
+  if (vMatch) return vMatch[1];
+  
+  // Pattern 3: Any X.Y.Z pattern in the filename
+  const genericMatch = filename.match(/(\d+\.\d+\.\d+)/);
+  if (genericMatch) return genericMatch[1];
+  
+  // Default fallback
+  return '1.0.0';
 }
 
 // Get release date (using file's last modified date)

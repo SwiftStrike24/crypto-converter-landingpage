@@ -21,6 +21,16 @@ A modern, responsive landing page for CryptoVertX - a desktop app that converts 
 - **Geist Font**: Modern typography
 - **Cloudflare R2**: Object storage for app downloads
 
+## Performance Optimizations
+
+The project includes several optimizations for Cloudflare Pages deployment:
+
+1. **Webpack Chunk Splitting**: Configured to stay under Cloudflare's 25MB file size limit
+2. **Dynamic Imports**: Lazy-loading of heavy components like Framer Motion
+3. **CSS Optimization**: PostCSS with cssnano for production
+4. **Bundle Analysis**: Tools to analyze and optimize bundle size
+5. **Custom Carousel**: Lightweight implementation without external dependencies
+
 ## Getting Started
 
 ### Prerequisites
@@ -63,6 +73,28 @@ npm run dev
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
 
+## Build and Analyze
+
+### Production Build
+
+```bash
+npm run build
+```
+
+### Bundle Analysis
+
+To analyze the bundle size:
+
+```bash
+npm run analyze
+```
+
+Or on Windows:
+
+```bash
+analyze.bat
+```
+
 ## Project Structure
 
 ```
@@ -85,6 +117,7 @@ src/
 │   ├── layout/              # Layout components
 │   │   ├── Header.tsx       # Navigation component
 │   │   ├── Footer.tsx       # Site footer
+│   ├── DynamicImports.tsx   # Dynamic imports for optimization
 ├── lib/                     # Utility functions
 │   ├── animations.ts        # Animation utilities
 │   ├── api.ts               # API utilities
@@ -122,11 +155,6 @@ To set up your R2 credentials:
    - Bucket Write (optional, only needed if you plan to modify bucket settings)
 3. Add your credentials to the `.env.local` file
 
-```bash
-# Test your R2 connection
-npm run test-r2
-```
-
 ### CORS Configuration
 
 To allow direct downloads from the R2 bucket, you need to configure CORS. Use the provided `cors.json` file:
@@ -142,17 +170,13 @@ wrangler login
 wrangler r2 bucket cors put cryptovertx-downloads --config cors.json
 ```
 
-### Troubleshooting
-
-If you encounter issues with R2, refer to the `R2-TROUBLESHOOTING.md` file for detailed guidance.
-
 ## Deployment
 
-This project is optimized for deployment on Vercel:
+This project is optimized for deployment on Cloudflare Pages:
 
 1. Push your code to GitHub
-2. Import the repository in Vercel
-3. Set up the environment variables in Vercel
+2. Import the repository in Cloudflare Pages
+3. Set up the environment variables in Cloudflare Pages
 4. Deploy
 
 ## License

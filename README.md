@@ -36,6 +36,7 @@ The project includes several optimizations for Cloudflare Pages deployment:
 ### Prerequisites
 
 - Node.js 18.17.0 or later
+- pnpm 8.0.0 or later
 
 ### Installation
 
@@ -47,7 +48,7 @@ cd crypto-converter-landingpage
 
 2. Install dependencies:
 ```bash
-npm install
+pnpm install
 ```
 
 3. Set up environment variables:
@@ -68,7 +69,7 @@ npm install
 
 4. Run the development server:
 ```bash
-npm run dev
+pnpm dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -78,7 +79,7 @@ npm run dev
 ### Production Build
 
 ```bash
-npm run build
+pnpm build
 ```
 
 ### Bundle Analysis
@@ -86,7 +87,7 @@ npm run build
 To analyze the bundle size:
 
 ```bash
-npm run analyze
+pnpm analyze
 ```
 
 Or on Windows:
@@ -161,7 +162,7 @@ To allow direct downloads from the R2 bucket, you need to configure CORS. Use th
 
 ```bash
 # Install Cloudflare Wrangler CLI
-npm install -g wrangler
+pnpm add -g wrangler
 
 # Login to Cloudflare
 wrangler login

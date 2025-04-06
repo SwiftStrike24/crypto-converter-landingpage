@@ -71,11 +71,60 @@ const nextConfig = {
   // Improve performance for production builds
   poweredByHeader: false,
   
-  // Configure headers to prevent caching of API routes
+  // Configure headers to improve security and prevent caching of API routes
   async headers() {
+    const securityHeaders = [
+      // Enforce HTTPS
+      {
+        key: 'Strict-Transport-Security',
+        value: 'max-age=63072000; includeSubDomains; preload' // 2 years
+      },
+      // Prevent MIME-sniffing
+      {
+        key: 'X-Content-Type-Options',
+        value: 'nosniff'
+      },
+      // Prevent Clickjacking
+      {
+        key: 'X-Frame-Options',
+        value: 'SAMEORIGIN' // or 'DENY' if not using iframes
+      },
+      // Control Referrer information
+      {
+        key: 'Referrer-Policy',
+        value: 'strict-origin-when-cross-origin'
+      },
+      // Control browser features
+      {
+        key: 'Permissions-Policy',
+        value: "camera=(), microphone=(), geolocation=(), payment=()" 
+      },
+      // Basic Content Security Policy (CSP) - refine this based on specific needs
+      {
+        key: 'Content-Security-Policy',
+        value: `
+          default-src 'self'; 
+          script-src 'self' 'unsafe-eval' 'unsafe-inline'; 
+          style-src 'self' 'unsafe-inline'; 
+          img-src 'self' data: coin-images.coingecko.com; 
+          font-src 'self'; 
+          connect-src 'self' https://api.coingecko.com; 
+          frame-src 'none'; 
+          object-src 'none'; 
+          form-action 'self'; 
+          base-uri 'self';
+        `.replace(/\s{2,}/g, ' ').trim() 
+      }
+    ];
+
     return [
       {
-        // Apply these headers to all API routes
+        // Apply security headers to all routes
+        source: '/:path*',
+        headers: securityHeaders,
+      },
+      {
+        // Apply specific caching headers to API routes
         source: '/api/:path*',
         headers: [
           {

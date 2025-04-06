@@ -447,13 +447,13 @@ export function formatCurrency(amount: number): string {
     return amount.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 6
+      maximumFractionDigits: 4
     });
   } else {
     return amount.toLocaleString('en-US', {
       style: 'currency',
       currency: 'USD',
-      maximumFractionDigits: 8
+      maximumFractionDigits: 12
     });
   }
 } 

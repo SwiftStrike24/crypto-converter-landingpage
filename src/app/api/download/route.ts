@@ -47,13 +47,6 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Convert the readable stream to a buffer
-    const chunks = [];
-    for await (const chunk of response.Body as unknown as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
-
     // Extract filename from the key
     const filename = key.split('/').pop() || 'download';
 
@@ -61,10 +54,14 @@ export async function GET(request: NextRequest) {
     const headers = new Headers();
     headers.set('Content-Disposition', `attachment; filename="${filename}"`);
     headers.set('Content-Type', response.ContentType || 'application/octet-stream');
-    headers.set('Content-Length', buffer.length.toString());
+    // Set Content-Length if available, otherwise rely on chunked encoding
+    if (response.ContentLength) {
+      headers.set('Content-Length', response.ContentLength.toString());
+    }
 
-    // Return the file as a stream
-    return new NextResponse(buffer, {
+    // Return the file as a stream directly from R2 response body
+    // The type assertion is necessary because the AWS SDK types might not perfectly align with Next.js expectations for ReadableStream
+    return new NextResponse(response.Body as ReadableStream<Uint8Array>, {
       status: 200,
       headers,
     });

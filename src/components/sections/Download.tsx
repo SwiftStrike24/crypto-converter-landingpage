@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 import ConverterDemo from '@/components/demo/ConverterDemo';
@@ -66,15 +66,6 @@ interface ApiError {
   details?: string;
 }
 
-// Download progress state interface
-interface DownloadProgress {
-  isDownloading: boolean;
-  progress: number;
-  error: string | null;
-  total: number;
-  loaded: number;
-}
-
 export default function Download() {
   const [selectedPlatform, setSelectedPlatform] = useState(platforms.find(p => !p.disabled)?.id || platforms[0].id);
   const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
@@ -88,18 +79,6 @@ export default function Download() {
   const [previousVersion, setPreviousVersion] = useState<string | null>(null);
   const [isNewVersion, setIsNewVersion] = useState(false);
   const [isClient, setIsClient] = useState(false);
-  
-  // New state for download progress
-  const [downloadProgress, setDownloadProgress] = useState<DownloadProgress>({
-    isDownloading: false,
-    progress: 0,
-    error: null,
-    total: 0,
-    loaded: 0
-  });
-  
-  // Add ref for abort controller to cancel downloads
-  const abortControllerRef = useRef<AbortController | null>(null);
   
   // Set isClient to true when component mounts (client-side only)
   useEffect(() => {
@@ -257,167 +236,6 @@ export default function Download() {
       console.log(`Updating file size from ${selectedPlatformData.size} to ${fileMetadata.size}`);
     }
   }, [fileMetadata, isClient, selectedPlatformData.size]);
-  
-  // Function to handle download with progress tracking
-  const handleDownload = async () => {
-    // Return early if fileMetadata is not available or already downloading
-    if (!fileMetadata || downloadProgress.isDownloading) return;
-    
-    try {
-      // Reset download progress state
-      setDownloadProgress({
-        isDownloading: true,
-        progress: 0,
-        error: null,
-        total: 0,
-        loaded: 0
-      });
-      
-      // Create an abort controller for cancellation
-      const abortController = new AbortController();
-      abortControllerRef.current = abortController;
-      
-      // Determine the download URL
-      const downloadUrl = process.env.NEXT_PUBLIC_R2_PUBLIC_URL ? 
-        `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${encodeURIComponent(fileMetadata.key)}` : 
-        `/api/download?key=${encodeURIComponent(fileMetadata.key)}`;
-      
-      // Start the fetch request
-      const response = await fetch(downloadUrl, {
-        signal: abortController.signal
-      });
-      
-      if (!response.ok) {
-        throw new Error(`Download failed with status: ${response.status}`);
-      }
-      
-      // Get total size from Content-Length header if available
-      const contentLength = response.headers.get('Content-Length');
-      const total = contentLength ? parseInt(contentLength, 10) : 0;
-      
-      // Create reader from response body stream
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error('Response body is not available as a readable stream');
-      }
-      
-      // Update total size in progress state
-      setDownloadProgress(prev => ({
-        ...prev,
-        total
-      }));
-      
-      // Array to store all chunks
-      const chunks: Uint8Array[] = [];
-      let loaded = 0;
-      
-      // Read stream chunks
-      while (true) {
-        const { done, value } = await reader.read();
-        
-        if (done) {
-          break;
-        }
-        
-        // Add the chunk to our array
-        chunks.push(value);
-        
-        // Update loaded bytes
-        loaded += value.length;
-        
-        // Calculate and update progress
-        const progress = total ? Math.min(Math.round((loaded / total) * 100), 100) : 0;
-        setDownloadProgress(prev => ({
-          ...prev,
-          progress,
-          loaded
-        }));
-      }
-      
-      // Combine all chunks into a single Uint8Array
-      const allChunks = new Uint8Array(loaded);
-      let position = 0;
-      for (const chunk of chunks) {
-        allChunks.set(chunk, position);
-        position += chunk.length;
-      }
-      
-      // Create a blob from the bytes
-      const blob = new Blob([allChunks], { 
-        type: response.headers.get('Content-Type') || 'application/octet-stream' 
-      });
-      
-      // Create URL for the blob
-      const url = URL.createObjectURL(blob);
-      
-      // Create a temporary anchor and trigger download
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = fileMetadata.filename || 'download';
-      document.body.appendChild(a);
-      a.click();
-      
-      // Clean up
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      // Set download as completed
-      setDownloadProgress(prev => ({
-        ...prev,
-        isDownloading: false,
-        progress: 100
-      }));
-      
-      // Reset progress after a delay
-      setTimeout(() => {
-        setDownloadProgress({
-          isDownloading: false,
-          progress: 0,
-          error: null,
-          total: 0,
-          loaded: 0
-        });
-      }, 3000);
-      
-    } catch (err) {
-      // Only show error if not aborted
-      if (err instanceof Error && err.name !== 'AbortError') {
-        setDownloadProgress(prev => ({
-          ...prev,
-          isDownloading: false,
-          error: err instanceof Error ? err.message : 'Download failed'
-        }));
-      } else {
-        // Reset state on abort
-        setDownloadProgress({
-          isDownloading: false,
-          progress: 0,
-          error: null,
-          total: 0,
-          loaded: 0
-        });
-      }
-    } finally {
-      abortControllerRef.current = null;
-    }
-  };
-  
-  // Function to cancel download
-  const cancelDownload = () => {
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-  };
-  
-  // Cleanup abortController on unmount
-  useEffect(() => {
-    return () => {
-      if (abortControllerRef.current) {
-        abortControllerRef.current.abort();
-      }
-    };
-  }, []);
   
   return (
     <section 
@@ -692,18 +510,26 @@ export default function Download() {
                   </div>
                 ) : (
                   <>
-                    {/* Replace anchor with button for controlled download */}
-                    <motion.button
-                      onClick={handleDownload}
+                    {/* Replace button with anchor tag for direct download */}
+                    <motion.a
+                      href={selectedPlatformData.downloadUrl}
+                      download={fileMetadata?.filename} // Use filename from metadata for download attribute
                       className={cn(
                         "w-full flex items-center justify-center gap-2 py-4 rounded-xl font-medium text-white",
                         "bg-gradient-to-r from-primary to-primary-light",
                         "hover:shadow-glow transition-all duration-300",
-                        (isLoading || downloadProgress.isDownloading) && "opacity-70 pointer-events-none"
+                        // Disable link visually if loading metadata, error occurred, or no metadata yet
+                        (isLoading || error || !fileMetadata) && "opacity-70 pointer-events-none" 
                       )}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      disabled={isLoading || downloadProgress.isDownloading}
+                      whileHover={{ scale: (!isLoading && !error && fileMetadata) ? 1.02 : 1 }} // Only scale if active
+                      whileTap={{ scale: (!isLoading && !error && fileMetadata) ? 0.98 : 1 }}   // Only tap if active
+                      // Prevent click if disabled
+                      onClick={(e) => {
+                        if (isLoading || error || !fileMetadata) {
+                          e.preventDefault();
+                        }
+                      }}
+                      aria-disabled={isLoading || !!error || !fileMetadata} // Add aria-disabled for accessibility
                     >
                       {isLoading ? (
                         <>
@@ -712,14 +538,6 @@ export default function Download() {
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                           </svg>
                           Loading...
-                        </>
-                      ) : downloadProgress.isDownloading ? (
-                        <>
-                          <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                          </svg>
-                          Downloading...
                         </>
                       ) : (
                         <>
@@ -731,101 +549,7 @@ export default function Download() {
                           Download for {selectedPlatformData.name}
                         </>
                       )}
-                    </motion.button>
-                    
-                    {/* Download progress indicator */}
-                    <AnimatePresence>
-                      {downloadProgress.isDownloading && (
-                        <motion.div
-                          className="mt-4 relative"
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                          transition={{ duration: 0.3 }}
-                        >
-                          <TooltipProvider>
-                            <Tooltip>
-                              <TooltipTrigger asChild>
-                                <div className="w-full">
-                                  {/* Progress bar background */}
-                                  <div className="w-full h-2 bg-background-darker rounded-full overflow-hidden">
-                                    {/* Progress bar fill */}
-                                    <motion.div 
-                                      className="h-full bg-gradient-to-r from-primary to-primary-light" 
-                                      initial={{ width: "0%" }}
-                                      animate={{ width: `${downloadProgress.progress}%` }}
-                                      transition={{ duration: 0.3 }}
-                                    />
-                                  </div>
-                                  
-                                  {/* Progress percentage and cancel button */}
-                                  <div className="flex justify-between items-center mt-2 text-xs text-text-secondary">
-                                    <div className="flex items-center gap-1">
-                                      <span className="font-medium">{downloadProgress.progress}%</span>
-                                      <span>
-                                        ({downloadProgress.total > 0 
-                                          ? `${formatFileSize(downloadProgress.loaded)} of ${formatFileSize(downloadProgress.total)}` 
-                                          : `${formatFileSize(downloadProgress.loaded)}`})
-                                      </span>
-                                    </div>
-                                    <motion.button
-                                      onClick={cancelDownload}
-                                      className="text-red-400 hover:text-red-300 transition-colors rounded-full p-1 hover:bg-red-500/10"
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.95 }}
-                                    >
-                                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <circle cx="12" cy="12" r="10"></circle>
-                                        <line x1="15" y1="9" x2="9" y2="15"></line>
-                                        <line x1="9" y1="9" x2="15" y2="15"></line>
-                                      </svg>
-                                    </motion.button>
-                                  </div>
-                                </div>
-                              </TooltipTrigger>
-                              <TooltipContent side="top" className="bg-background-card border border-gray-800 text-text-primary p-3 rounded-lg shadow-xl">
-                                <p className="text-sm">Downloading {fileMetadata?.filename}</p>
-                                <p className="text-xs text-text-secondary mt-1">
-                                  {downloadProgress.total > 0 
-                                    ? `${downloadProgress.progress}% (${formatFileSize(downloadProgress.loaded)} of ${formatFileSize(downloadProgress.total)})` 
-                                    : `${formatFileSize(downloadProgress.loaded)} downloaded`}
-                                </p>
-                              </TooltipContent>
-                            </Tooltip>
-                          </TooltipProvider>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                    
-                    {/* Download error message */}
-                    <AnimatePresence>
-                      {downloadProgress.error && (
-                        <motion.div 
-                          className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-red-400 text-sm"
-                          initial={{ opacity: 0, y: -10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                        >
-                          <div className="flex items-start gap-2">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                              <circle cx="12" cy="12" r="10"></circle>
-                              <line x1="12" y1="8" x2="12" y2="12"></line>
-                              <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                            </svg>
-                            <span>{downloadProgress.error}</span>
-                          </div>
-                          <div className="mt-2 flex justify-end">
-                            <motion.button
-                              onClick={() => setDownloadProgress(prev => ({ ...prev, error: null }))}
-                              className="text-xs text-text-secondary hover:text-text-primary transition-colors px-2 py-1"
-                              whileHover={{ scale: 1.05 }}
-                            >
-                              Dismiss
-                            </motion.button>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
+                    </motion.a>
                   </>
                 )}
               </div>

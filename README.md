@@ -135,10 +135,12 @@ src/
 The landing page uses Cloudflare R2 for storing and serving application downloads. The setup includes:
 
 1. A bucket named `cryptovertx-downloads` with the following structure:
-   - `latest/CryptoVertX-Setup-1.0.0.exe` - Latest Windows installer
-   - `versions/1.0.0/CryptoVertX-Setup-1.0.0.exe` - Versioned Windows installer
-   - `latest/CryptoVertX-Mac-1.0.0.dmg` - Latest macOS installer
+   - `latest/CryptoVertX-Installer-v1.7.2.msi` - Latest Windows installer (`.msi` or `.exe`)
+   - `versions/1.7.2/CryptoVertX-Installer-v1.7.2.msi` - Versioned Windows installer
+   - `latest/CryptoVertX-Mac-1.0.0.dmg` - Latest macOS installer (`.dmg` or `.pkg`)
    - `versions/1.0.0/CryptoVertX-Mac-1.0.0.dmg` - Versioned macOS installer
+
+   **Note on Naming:** For the automatic detection to work, Windows installers in the `latest/` directory should have filenames containing either **"Setup"** or **"Installer"**.
 
 2. API routes for:
    - Fetching file metadata (`/api/files`)

@@ -62,7 +62,9 @@ export async function GET(request: NextRequest) {
         const filteredFiles = allFiles.filter(file => {
           const key = file.Key || '';
           if (platform === 'windows') {
-            return key.includes('Setup') && (key.endsWith('.exe') || key.endsWith('.msi'));
+            const hasInstallerKeyword = key.includes('Setup') || key.includes('Installer');
+            const hasCorrectExtension = key.endsWith('.exe') || key.endsWith('.msi');
+            return hasInstallerKeyword && hasCorrectExtension;
           } else if (platform === 'mac') {
             return key.includes('Mac') && (key.endsWith('.dmg') || key.endsWith('.pkg'));
           }

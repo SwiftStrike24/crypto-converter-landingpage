@@ -36,7 +36,7 @@ const itemVariants = {
     y: 0,
     opacity: 1,
     transition: {
-      type: 'spring',
+      type: 'spring' as const,
       stiffness: 100,
       damping: 10,
     },
@@ -49,7 +49,7 @@ const githubButtonVariants = {
   hover: { 
     scale: 1.05,
     transition: { 
-      type: 'spring', 
+      type: 'spring' as const, 
       stiffness: 400, 
       damping: 10 
     }
@@ -57,7 +57,7 @@ const githubButtonVariants = {
   tap: { 
     scale: 0.95,
     transition: { 
-      type: 'spring', 
+      type: 'spring' as const, 
       stiffness: 400, 
       damping: 10 
     }
@@ -154,7 +154,7 @@ export default function Footer() {
                     <motion.li 
                       key={link.label}
                       whileHover={{ x: 5 }}
-                      transition={{ type: 'spring', stiffness: 300 }}
+                      transition={{ type: 'spring' as const, stiffness: 300 }}
                     >
                       <Link
                         href={link.href}

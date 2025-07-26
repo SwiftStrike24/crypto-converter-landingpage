@@ -11,7 +11,7 @@ CryptoVertX is a modern, responsive landing page for a desktop cryptocurrency co
 -   **Framework:** Next.js 15
 -   **Language:** TypeScript
 -   **Styling:** Tailwind CSS 4, ShadCN UI, PostCSS
--   **Animation:** Framer Motion
+-   **Animation:** Framer Motion, Canvas API
 -   **Font:** Geist
 -   **Deployment:** Vercel / Cloudflare Pages
 -   **Backend Storage:** Cloudflare R2 for application downloads
@@ -63,12 +63,18 @@ The main landing page (`src/app/page.tsx`) is composed of several modular sectio
 -   **Objective:** Create a strong first impression and introduce the application.
 -   **Key Features:**
     -   **Live Crypto Data:** Fetches and displays real-time prices for featured cryptocurrencies from the CoinGecko API via `lib/api.ts`. Includes placeholder data for resilience.
-    -   **Interactive Animations:**
-        -   `ParticleWave` and `WavyBackground` provide an animated, ambient backdrop.
-        -   `FloatingCryptoIcon` components feature physics-based floating animations and react to mouse-over events for a 3D parallax effect.
+    -   **Enhanced Interactive Animations:**
+        -   **`ParticleWave`**: Canvas-based particle system with neon glow effects, trailing tails, jitter motion, gravitational drift, and scroll-linked speed changes. Particles react to mouse hover with ripple-like repulsion.
+        -   **`WavyBackground`**: Canvas-rendered waves with multiple layers, neon glow edges, scroll-linked amplitude changes, and interactive ripple effects on mouse movement/click.
+        -   **`AnimationProvider`**: Shared context providing scroll progress and mouse position to sync animations across components.
+    -   **`FloatingCryptoIcon`** components feature physics-based floating animations and react to mouse-over events for a 3D parallax effect.
     -   **Converter Demo:** Embeds the interactive `ConverterDemo.tsx` component, allowing users to try the app's core functionality directly on the page.
     -   **Parallax Scroll:** The title, subtitle, and app preview move at different rates during page scroll to add depth.
--   **Optimization:** Makes heavy use of the `ClientOnly` wrapper to prevent hydration errors and ensure complex, client-side animations and data fetching do not run on the server.
+-   **Performance Optimizations:** 
+    -   Automatic performance detection disables heavy effects (tails, extra particles, glow) on low-end devices.
+    -   FPS monitoring with degradation to maintain smooth experience.
+    -   Canvas rendering for better performance vs SVG with hundreds of elements.
+    -   `ClientOnly` wrapper prevents hydration errors and ensures animations only run client-side.
 
 #### 4.2.2. Features Section (`Features.tsx`)
 
@@ -113,6 +119,53 @@ The main landing page (`src/app/page.tsx`) is composed of several modular sectio
     -   Includes a "Technical Analysis" widget from TradingView to show market sentiment.
     -   Features a detailed, mock price chart that visualizes historical data.
 
+### 4.4. Enhanced Animation System
+
+#### 4.4.1. Animation Context (`AnimationProvider.tsx` & `lib/animations.ts`)
+
+-   **Purpose:** Provides shared animation state across components for synchronized effects.
+-   **Features:**
+    -   Tracks scroll progress (0-1) using Framer Motion's `useScroll`.
+    -   Tracks mouse position globally.
+    -   Detects device performance capabilities.
+    -   Provides FPS counter utility for performance monitoring.
+
+#### 4.4.2. ParticleWave Component
+
+-   **Rendering:** Canvas-based for optimal performance with 100+ particles.
+-   **Particle Types:**
+    -   Regular particles: Smaller, interactive, form connections.
+    -   Ambient particles: Larger, slower, background depth effect.
+-   **Behaviors:**
+    -   **Jitter:** Random micro-movements for organic feel.
+    -   **Gravitational Drift:** Subtle downward pull.
+    -   **Shimmer/Glow:** Pulsing neon glow with radial gradients.
+    -   **Trailing Tails:** Motion trails that fade over time (high-perf only).
+-   **Interactivity:**
+    -   **Scroll-Linked:** Particle speed increases with scroll progress.
+    -   **Mouse Ripples:** Particles repel from cursor within interaction radius.
+    -   **Wave Motion:** Sine-wave vertical displacement synced across particles.
+-   **Performance:**
+    -   Adaptive particle count based on device (60-120 regular, 10-20 ambient).
+    -   FPS monitoring with automatic degradation.
+    -   Boundary wrapping for seamless infinite motion.
+
+#### 4.4.3. WavyBackground Component
+
+-   **Rendering:** Multi-layer canvas waves with composite blending.
+-   **Wave Features:**
+    -   **Multiple Layers:** 2-4 wave layers with different frequencies/amplitudes.
+    -   **Neon Glow:** Glowing edges on wave crests (high-perf only).
+    -   **Organic Motion:** Primary + secondary sine waves for natural flow.
+-   **Interactivity:**
+    -   **Scroll-Linked:** Wave amplitude and speed increase with scroll.
+    -   **Click Ripples:** Strong ripple effects on click.
+    -   **Hover Ripples:** Subtle ripples on mouse move in lower screen area.
+-   **Visual Effects:**
+    -   Screen blend mode for luminous overlapping.
+    -   Gradient fills with decreasing opacity per layer.
+    -   Alternating colors (purple/mint) between layers.
+
 ## 5. Backend API
 
 ### 5.1. `/api/files`
@@ -137,11 +190,38 @@ The main landing page (`src/app/page.tsx`) is composed of several modular sectio
 
 ## 6. Styling & Animations
 
--   **Theme:** A custom dark theme is defined in `tailwind.config.js` with specific colors for background, text, and primary/secondary accents.
+-   **Theme:** A custom dark theme is defined in `tailwind.config.js` with specific colors for background, text, and primary/secondary accents. Neon purple/cyan/magenta palette for futuristic feel.
 -   **UI Components:** Leverages `shadcn/ui` for primitives like buttons, accordions, and tooltips, which are then custom-styled.
--   **Animations:** `framer-motion` is used extensively for both subtle (fade-ins) and complex (physics-based) animations, enhancing user engagement. Global animation styles (e.g., for keyframes) are defined directly within the components that use them via `<style jsx global>`.
+-   **Animations:** 
+    -   `framer-motion` for declarative animations and scroll tracking.
+    -   Canvas API for performance-critical particle and wave animations.
+    -   CSS filters for contrast/brightness enhancement on canvas elements.
 
-## 7. Optimizations
+## 7. Performance Optimizations
 
--   **Dynamic Imports:** The `ClientOnly` component (`@/components/ClientOnly.tsx`) is a custom wrapper that defers the rendering of its children to the client side. This is crucial for performance and preventing server-side rendering of heavily interactive or browser-dependent components.
--   **Bundle Analysis:** The project is configured with `next-bundle-analyzer` (`analyze-bundle.mjs`) to help developers inspect and optimize the client-side JavaScript bundle size. 
+-   **Dynamic Imports:** The `ClientOnly` component defers rendering to client-side for browser-dependent features.
+-   **Canvas Rendering:** Particle and wave animations use Canvas API instead of SVG/DOM for 60fps with hundreds of elements.
+-   **Adaptive Quality:** 
+    -   Device detection reduces particle count and disables effects on mobile/low-spec.
+    -   FPS monitoring triggers degradation if performance drops below 30fps.
+    -   Separate settings for regular vs ambient particles.
+-   **Animation Throttling:** 
+    -   Mouse ripples throttled to 100ms intervals.
+    -   Resize events debounced.
+    -   RequestAnimationFrame for smooth 60fps rendering.
+-   **Bundle Analysis:** Configured with `next-bundle-analyzer` to monitor JavaScript bundle size.
+
+## 8. Edge Cases & Error Handling
+
+-   **Animation Fallbacks:**
+    -   No WebGL required - pure Canvas 2D for compatibility.
+    -   Graceful degradation on low-end devices.
+    -   Console logging for performance debugging.
+-   **Mouse Interaction Boundaries:**
+    -   Ripples only trigger in valid screen areas.
+    -   Particle repulsion capped to prevent extreme movements.
+    -   Proper cleanup of event listeners.
+-   **Memory Management:**
+    -   Old ripples cleaned up after 2 seconds.
+    -   Particle tail arrays capped at 5 positions.
+    -   Canvas dimensions update on resize without memory leaks. 

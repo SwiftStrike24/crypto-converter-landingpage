@@ -1,3 +1,66 @@
+'use client';
+
+import { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { useScroll, MotionValue } from 'framer-motion';
+
+// Animation context for sharing scroll and mouse data
+interface AnimationContextType {
+  scrollProgress: number;
+  mousePosition: { x: number; y: number };
+  scrollYProgress: MotionValue<number>;
+  isHighPerformance: boolean;
+}
+
+const AnimationContext = createContext<AnimationContextType | null>(null);
+
+export const useAnimationContext = () => {
+  const context = useContext(AnimationContext);
+  if (!context) {
+    throw new Error('useAnimationContext must be used within AnimationProvider');
+  }
+  return context;
+};
+
+// Performance detection utility
+export const detectPerformance = (): boolean => {
+  // Check device memory if available
+  if ('deviceMemory' in navigator) {
+    return (navigator as any).deviceMemory >= 4;
+  }
+  
+  // Check for mobile devices
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  
+  // Simple performance check based on screen size and device type
+  const isLargeScreen = window.innerWidth > 1024;
+  
+  return !isMobile && isLargeScreen;
+};
+
+// FPS counter utility
+export const createFPSCounter = () => {
+  let fps = 60;
+  let lastTime = performance.now();
+  let frames = 0;
+  
+  const update = () => {
+    frames++;
+    const currentTime = performance.now();
+    
+    if (currentTime >= lastTime + 1000) {
+      fps = Math.round((frames * 1000) / (currentTime - lastTime));
+      frames = 0;
+      lastTime = currentTime;
+    }
+    
+    return fps;
+  };
+  
+  return { update, getFPS: () => fps };
+};
+
+export { AnimationContext };
+
 /**
  * Animation utilities for the Crypto Converter landing page
  * Using Framer Motion animation variants

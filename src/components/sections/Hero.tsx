@@ -8,9 +8,10 @@ import { getCryptoPrices, CryptoPrice, formatCurrency, FEATURED_CRYPTOS, CRYPTO_
 import { motion } from "framer-motion";
 import ClientOnly from '@/components/ClientOnly';
 import ConverterDemo from '@/components/demo/ConverterDemo';
-// Import our new animation components
+// Import our animation components
 import ParticleWave from '@/components/animations/ParticleWave';
 import WavyBackground from '@/components/animations/WavyBackground';
+import { AnimationProvider } from '@/components/animations/AnimationProvider';
 
 // Floating crypto coin component with physics-based animation
 const FloatingCryptoIcon = ({
@@ -264,9 +265,12 @@ export default function Hero() {
       ref={heroRef}
       className="relative min-h-screen pt-24 pb-16 overflow-hidden bg-background-gradient"
     >
-      {/* Add our animation components */}
-      <ParticleWave />
-      <WavyBackground />
+      {/* Wrap animations with AnimationProvider */}
+      <AnimationProvider>
+        {/* Add our animation components */}
+        <ParticleWave />
+        <WavyBackground />
+      </AnimationProvider>
       
       {/* Background gradient with noise texture */}
       <div className="absolute inset-0 bg-gradient-to-b from-background to-background-darker opacity-80"></div>

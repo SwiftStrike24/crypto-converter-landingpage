@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, MotionValue, useTransform } from 'framer-motion';
 import ConverterDemo from '@/components/demo/ConverterDemo';
 import {
   Tooltip,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/tooltip';
 import React from 'react';
 import { formatFileSize } from '@/lib/utils';
+import ParticleWave from '@/components/animations/ParticleWave';
 
 // Platform data
 const platforms = [
@@ -66,7 +67,28 @@ interface ApiError {
   details?: string;
 }
 
-export default function Download() {
+// Define our new green galaxy color palette
+const greenGalaxyPalette = [
+  '#00FFC2', '#00E8A8', '#00D18E', '#00BA74',
+  '#00A35A', '#008C40', '#007526', '#005E0C'
+];
+
+export default function Download({
+  howItWorksScrollYProgress,
+  downloadScrollYProgress,
+  downloadScrollYVelocity,
+}: {
+  howItWorksScrollYProgress: MotionValue<number>;
+  downloadScrollYProgress: MotionValue<number>;
+  downloadScrollYVelocity: MotionValue<number>;
+}) {
+  // Entry animation from previous section
+  const entryScale = useTransform(howItWorksScrollYProgress, [0.3, 0.6], [0.9, 1]);
+  const entryOpacity = useTransform(howItWorksScrollYProgress, [0.3, 0.6], [0, 1]);
+
+  // Exit animation for this section
+  const exitScale = useTransform(downloadScrollYProgress, [0, 0.8], [1, 0.8]);
+  const exitOpacity = useTransform(downloadScrollYProgress, [0, 0.5, 0.8], [1, 1, 0]);
   const [selectedPlatform, setSelectedPlatform] = useState(platforms.find(p => !p.disabled)?.id || platforms[0].id);
   const [fileMetadata, setFileMetadata] = useState<FileMetadata | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -238,13 +260,17 @@ export default function Download() {
   }, [fileMetadata, isClient, selectedPlatformData.size]);
   
   return (
-    <section 
+    <motion.section
       id="download"
       className="relative py-24 overflow-hidden bg-background"
+      style={{ scale: entryScale, opacity: entryOpacity }}
     >
-      {/* Background elements */}
-      <div className="absolute inset-0 bg-background-gradient"></div>
-      <div className="absolute inset-0 bg-noise opacity-5"></div>
+      <motion.div style={{ scale: exitScale, opacity: exitOpacity }}>
+        {/* Background elements */}
+        <div className="absolute inset-0 bg-background-gradient"></div>
+        <div className="absolute inset-0 bg-noise opacity-5"></div>
+        <ParticleWave scrollYProgress={howItWorksScrollYProgress} animationType="ambient" colorPalette={greenGalaxyPalette} />
+        <ParticleWave scrollYProgress={downloadScrollYProgress} scrollYVelocity={downloadScrollYVelocity} animationType="travel" colorPalette={greenGalaxyPalette} />
       <div className="absolute top-0 left-0 w-full h-64 bg-gradient-to-b from-background to-transparent"></div>
       <div className="absolute bottom-0 right-0 w-1/2 h-1/2 bg-gradient-radial from-primary/10 to-transparent opacity-30 blur-3xl"></div>
       
@@ -619,6 +645,7 @@ export default function Download() {
           </motion.div>
         </div>
       </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 } 

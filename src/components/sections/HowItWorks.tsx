@@ -2,9 +2,10 @@
 
 import { useState, useRef } from 'react';
 import { cn } from '@/lib/utils';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useTransform, MotionValue } from 'framer-motion';
 import { ChevronRight, ChevronLeft, RefreshCw, BarChart3, Wallet, Activity } from 'lucide-react';
 import React from 'react';
+import ParticleWave from '@/components/animations/ParticleWave';
 
 // Steps data with icons
 const steps = [
@@ -38,9 +39,29 @@ const steps = [
   },
 ];
 
-export default function HowItWorks() {
+const orangeStarPalette = [
+  '#FFC300', '#FF5733', '#C70039', '#900C3F', '#581845', '#DAF7A6', '#FFC300', '#FF5733'
+];
+
+export default function HowItWorks({
+  featuresScrollYProgress,
+  howItWorksScrollYProgress,
+  howItWorksScrollYVelocity,
+}: {
+  featuresScrollYProgress: MotionValue<number>;
+  howItWorksScrollYProgress: MotionValue<number>;
+  howItWorksScrollYVelocity: MotionValue<number>;
+}) {
   const [activeStep, setActiveStep] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Entry animation from previous section
+  const scale = useTransform(featuresScrollYProgress, [0.3, 0.6], [0.9, 1]);
+  const opacity = useTransform(featuresScrollYProgress, [0.3, 0.6], [0, 1]);
+
+  // Exit animation for this section
+  const exitScale = useTransform(howItWorksScrollYProgress, [0, 0.8], [1, 0.8]);
+  const exitOpacity = useTransform(howItWorksScrollYProgress, [0, 0.5, 0.8], [1, 1, 0]);
   
   const nextStep = () => {
     setActiveStep((prev) => (prev + 1) % steps.length);
@@ -51,10 +72,14 @@ export default function HowItWorks() {
   };
 
   return (
-    <section 
-      id="how-it-works" 
+    <motion.section
+      id="how-it-works"
       className="py-10 sm:py-12 md:py-16 bg-background-darker relative overflow-hidden"
+      style={{ scale, opacity }}
     >
+      <motion.div style={{ scale: exitScale, opacity: exitOpacity }}>
+        <ParticleWave scrollYProgress={featuresScrollYProgress} animationType="ambient" colorPalette={orangeStarPalette} />
+        <ParticleWave scrollYProgress={howItWorksScrollYProgress} scrollYVelocity={howItWorksScrollYVelocity} animationType="travel" colorPalette={orangeStarPalette} />
       {/* Background elements */}
       <div className="absolute inset-0 bg-noise opacity-5"></div>
       <div className="absolute inset-0 bg-grid-pattern opacity-5"></div>
@@ -188,6 +213,7 @@ export default function HowItWorks() {
           </div>
         </div>
       </div>
-    </section>
+      </motion.div>
+    </motion.section>
   );
 } 

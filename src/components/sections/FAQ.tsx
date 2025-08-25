@@ -1,12 +1,13 @@
 'use client';
 
-import { motion } from 'framer-motion';
+import { motion, MotionValue, useTransform } from 'framer-motion';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import ParticleWave from '@/components/animations/ParticleWave';
 
 // FAQ data
 const faqItems = [
@@ -52,10 +53,38 @@ const faqItems = [
   },
 ];
 
-export default function FAQ() {
+// Define our new galaxy palette for the FAQ section
+const faqGalaxyPalette = [
+  '#8A2BE2', // primary
+  '#9D50BB', // primary-light
+  '#00CED1', // secondary
+  '#40E0D0', // secondary-light
+  '#7B68EE', // A nice in-between purple
+  '#20B2AA', // A nice in-between cyan
+];
+
+export default function FAQ({
+  downloadScrollYProgress,
+  faqScrollYProgress,
+  faqScrollYVelocity,
+}: {
+  downloadScrollYProgress: MotionValue<number>;
+  faqScrollYProgress: MotionValue<number>;
+  faqScrollYVelocity: MotionValue<number>;
+}) {
+  // Entry animation from previous section
+  const entryScale = useTransform(downloadScrollYProgress, [0.3, 0.6], [0.9, 1]);
+  const entryOpacity = useTransform(downloadScrollYProgress, [0.3, 0.6], [0, 1]);
+
   return (
-    <section id="faq" className="py-24 bg-background relative overflow-hidden">
+    <motion.section
+      id="faq"
+      className="py-24 bg-background relative overflow-hidden"
+      style={{ scale: entryScale, opacity: entryOpacity }}
+    >
       {/* Background elements */}
+      <ParticleWave scrollYProgress={downloadScrollYProgress} animationType="ambient" colorPalette={faqGalaxyPalette} />
+      <ParticleWave scrollYProgress={faqScrollYProgress} scrollYVelocity={faqScrollYVelocity} animationType="travel" colorPalette={faqGalaxyPalette} />
       <div className="absolute inset-0 bg-noise-pattern opacity-[0.03]"></div>
       <div className="absolute top-0 left-0 w-1/3 h-1/3 bg-gradient-radial from-primary/10 to-transparent opacity-20 blur-3xl"></div>
       <div className="absolute bottom-0 right-0 w-1/3 h-1/3 bg-gradient-radial from-secondary/10 to-transparent opacity-20 blur-3xl"></div>
@@ -110,6 +139,6 @@ export default function FAQ() {
           </Accordion>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 } 

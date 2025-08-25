@@ -10,7 +10,12 @@ import ClientOnly from '@/components/ClientOnly';
 import ConverterDemo from '@/components/demo/ConverterDemo';
 // Import our new animation components
 import ParticleWave from '@/components/animations/ParticleWave';
-import WavyBackground from '@/components/animations/WavyBackground';
+import { useTransform, MotionValue } from 'framer-motion';
+
+// Define a vibrant color palette for the hero section's particle wave
+const heroStarPalette = [
+  '#FFFFFF', '#8A2BE2', '#00CED1', '#9D50BB', '#40E0D0', '#7B68EE'
+];
 
 // Floating crypto coin component with physics-based animation
 const FloatingCryptoIcon = ({
@@ -174,12 +179,14 @@ const FloatingCryptoIcon = ({
   );
 };
 
-export default function Hero() {
+export default function Hero({ scrollYProgress, scrollYVelocity }: { scrollYProgress: MotionValue<number>, scrollYVelocity: MotionValue<number> }) {
   const heroRef = useRef<HTMLDivElement>(null);
   const [cryptoData, setCryptoData] = useState<CryptoPrice[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isClient, setIsClient] = useState(false);
-  const [scrollY, setScrollY] = useState(0);
+  
+  const opacity = useTransform(scrollYProgress, [0, 0.5, 0.8], [1, 1, 0]);
+  const scale = useTransform(scrollYProgress, [0, 0.8], [1, 0.8]);
   
   // Set isClient to true on mount (client-side only)
   useEffect(() => {
@@ -210,15 +217,9 @@ export default function Hero() {
     return () => clearInterval(interval);
   }, []);
   
-  // Parallax effect on scroll
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrollY(window.scrollY);
-    };
-    
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  const titleY = useTransform(scrollYProgress, [0, 1], [0, 150]);
+  const subtitleY = useTransform(scrollYProgress, [0, 1], [0, 100]);
+  const appPreviewY = useTransform(scrollYProgress, [0, 1], [0, 50]);
   
   // Generate placeholder crypto data from CRYPTO_METADATA
   const generatePlaceholderData = (): CryptoPrice[] => {
@@ -243,11 +244,6 @@ export default function Hero() {
     return CRYPTO_METADATA[id]?.color || 'bg-gray-500';
   };
   
-  // Calculate transform styles based on state
-  const getTitleTransform = () => `translateY(${scrollY * 0.2}px)`;
-  const getSubtitleTransform = () => `translateY(${scrollY * 0.1}px)`;
-  const getAppPreviewTransform = () => `translateY(${scrollY * 0.05}px)`;
-  
   // Handle navigation link clicks with smooth scrolling
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
@@ -260,13 +256,19 @@ export default function Hero() {
   };
 
   return (
-    <section
+    <motion.section
       ref={heroRef}
-      className="relative min-h-screen pt-24 pb-16 overflow-hidden bg-background-gradient"
+      className="relative h-screen pt-24 pb-16 overflow-hidden bg-background-gradient"
+      style={{ opacity, scale }}
     >
       {/* Add our animation components */}
-      <ParticleWave />
-      <WavyBackground />
+      <ParticleWave 
+        animationType="ambient"
+        colorPalette={heroStarPalette}
+        particleDensity={2500}
+        scrollYProgress={scrollYProgress} 
+        scrollYVelocity={scrollYVelocity} 
+      />
       
       {/* Background gradient with noise texture */}
       <div className="absolute inset-0 bg-gradient-to-b from-background to-background-darker opacity-80"></div>
@@ -298,7 +300,7 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6 }}
-                style={{ transform: getTitleTransform() }}
+                style={{ y: titleY }}
               >
                 Real-Time Crypto Conversion at Your Fingertips
               </motion.h1>
@@ -310,7 +312,7 @@ export default function Hero() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.2 }}
-                style={{ transform: getSubtitleTransform() }}
+                style={{ y: subtitleY }}
               >
                 CryptoVertX is a sleek and powerful desktop application for real-time cryptocurrency conversion and tracking. Convert between multiple cryptocurrencies with live price updates.
               </motion.p>
@@ -408,7 +410,7 @@ export default function Hero() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.8, delay: 0.4 }}
-              style={{ transform: getAppPreviewTransform() }}
+              style={{ y: appPreviewY }}
             >
               <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-800 bg-background-card">
                 {/* App window header */}
@@ -476,6 +478,6 @@ export default function Hero() {
           <div className="w-1 h-2 bg-text-secondary rounded-full animate-scroll-indicator"></div>
         </div>
       </motion.div>
-    </section>
+    </motion.section>
   );
 }

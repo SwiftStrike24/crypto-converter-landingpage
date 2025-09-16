@@ -96,7 +96,7 @@ The main landing page (`src/app/page.tsx`) is composed of several modular sectio
     -   **Platform Selector:** Allows users to select their operating system (currently Windows, with macOS as "Coming Soon").
     -   **Robust Error Handling:** If the API fails to fetch file data, it displays a user-friendly error message and a retry button.
     -   **Automatic Updates:** Periodically re-fetches metadata to check for new versions and displays a "New!" badge if a new version is detected.
-    -   **Download Pipeline:** Uses the unified `/api/download?key=...` route for all downloads to ensure Range support and consistent headers. The browser manages resume via native Range requests.
+    -   **Download Pipeline:** Uses the unified `/api/download?key=...` route for all downloads. In production this route issues a 307 redirect to a long-lived presigned R2 URL (default). The browser then downloads directly from R2, which fully supports Range and large files. A fallback streaming path can be enabled by setting `DOWNLOAD_VIA_PRESIGNED=false`.
     -   **Embedded Demo:** Includes another instance of the `ConverterDemo` for user engagement.
     -   **Dual Particle System:** Renders two instances of the `ParticleWave` component. An `ambient` green galaxy effect is active when scrolling into the section, and a `travel` effect creates a star-streaking transition when scrolling out of the section.
     -   **3D Scroll Animation:** Implements consistent entry (zoom-in from previous section) and exit (zoom-out) animations using `useTransform` hooks based on scroll progress, maintaining the seamless 3D-like transition effect throughout the page.
@@ -162,23 +162,11 @@ The landing page implements a comprehensive, consistent 3D-like scrolling experi
 
 ### 5.2. `/api/download`
 
--   **Purpose:** Streams files directly from R2 with full HTTP Range support for reliable, resumable downloads.
--   **Behavior:**
-    -   Always streams via the API route (no presigned URLs are exposed to the client), ensuring consistent headers and telemetry.
-    -   If the request includes a `Range` header, the route:
-        -   Sends `GetObject` with the same `Range` to R2
-        -   Returns `206 Partial Content` with `Content-Range` and `Content-Length` equal to the segment size
-    -   If there is no `Range` header, the route returns `200 OK` with the full `Content-Length`.
--   **Headers:**
-    -   `Accept-Ranges: bytes`
-    -   `Cache-Control: no-store`
-    -   `Content-Type: application/x-msi` for MSI files (fallback to R2-provided content type or `application/octet-stream`)
-    -   `Content-Disposition: attachment; filename="<actual file name>"`
-    -   `ETag` passthrough if provided by R2
--   **Errors:**
-    -   Invalid ranges return `416 Range Not Satisfiable` with `Content-Range: bytes */<total>`
-    -   Unauthorized returns `401`
--   **Telemetry:** Logs include request host, requested range, resulting status, `Content-Length`, `Content-Range`, and `ETag`.
+-   **Purpose:** Provide a resilient, resumable download system compatible with Vercel limits.
+-   **Default Behavior (Production):** Issues a `307 Temporary Redirect` to a presigned R2 GET URL (TTL 4h) with `ResponseContentDisposition` and `ResponseContentType` set, so R2 serves the correct filename and type. The browser downloads directly from R2 which supports HTTP Range and large files reliably.
+-   **Fallback (Streaming Mode):** If `DOWNLOAD_VIA_PRESIGNED=false` (e.g., local/dev), the route streams directly from R2 and honors Range headers, including partial `206` responses, `Accept-Ranges`, `Content-Range`, `Content-Length`, `ETag`, and `Cache-Control: no-store`.
+-   **Errors:** Invalid ranges return `416` with `Content-Range: bytes */<total>`. Unauthorized returns `401`.
+-   **Telemetry:** Logs include request host, mode (presigned-redirect|stream), requested range, resulting status, `Content-Length`/`Content-Range` when streaming, and `ETag` when available.
 
 ## 6. Styling & Animations
 

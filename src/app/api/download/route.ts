@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GetObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { BUCKET_NAME, createR2Client } from '@/lib/r2';
 import { Readable } from 'stream';
 
@@ -11,6 +12,12 @@ interface R2Error extends Error {
   Code?: string;
   $metadata?: Record<string, unknown>;
   $fault?: string;
+}
+
+// Local compat wrapper to tolerate smithy type skew during build
+function presignUrlCompat(client: unknown, command: unknown, expiresInSeconds: number): Promise<string> {
+  const fn = getSignedUrl as unknown as (c: unknown, cmd: unknown, opts: { expiresIn: number }) => Promise<string>;
+  return fn(client, command, { expiresIn: expiresInSeconds });
 }
 
 export async function GET(request: NextRequest) {
@@ -30,11 +37,33 @@ export async function GET(request: NextRequest) {
 
     const filename = key.split('/').pop() || 'download';
 
-    console.log(`[download] host=${host} key=${key} range=${rangeHeader || 'none'}`);
+    // Decide strategy: default to presigned redirect to avoid Vercel streaming limits
+    const usePresignedRedirect = process.env.DOWNLOAD_VIA_PRESIGNED !== 'false';
+
+    console.log(`[download] host=${host} key=${key} mode=${usePresignedRedirect ? 'presigned-redirect' : 'stream'} range=${rangeHeader || 'none'}`);
 
     // Create a fresh client for this request
     const client = createR2Client();
 
+    if (usePresignedRedirect) {
+      const isMsi = filename.toLowerCase().endsWith('.msi');
+      // Attach response headers to the signed URL so R2 serves with correct filename/content type
+      const command = new GetObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: key,
+        ResponseContentDisposition: `attachment; filename="${filename}"`,
+        ResponseContentType: isMsi ? 'application/x-msi' : 'application/octet-stream',
+      });
+      const expiresInSeconds = 60 * 60 * 4; // 4 hours
+      const signedUrl = await presignUrlCompat(client, command, expiresInSeconds);
+      console.log(`[download] redirect -> R2 signed url (ttl=${expiresInSeconds}s)`);
+      const headers = new Headers();
+      headers.set('Location', signedUrl);
+      headers.set('Cache-Control', 'no-store');
+      return new NextResponse(null, { status: 307, headers });
+    }
+
+    // Streaming path (fallback)
     // Build GetObject with optional Range
     const getCommand = new GetObjectCommand({
       Bucket: BUCKET_NAME,

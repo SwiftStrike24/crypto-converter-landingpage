@@ -56,9 +56,12 @@ const defaultVersionInfo = {
 interface FileMetadata {
   key: string;
   filename: string;
-  size: string;
+  sizeBytes: number;
+  size?: string;
   version: string;
   releaseDate: string;
+  etag?: string;
+  sha256?: string;
 }
 
 // Type for API error
@@ -141,7 +144,7 @@ export default function Download({
           throw new Error(errorData.error || `Failed to fetch file metadata (${response.status})`);
         }
         
-        const data = await response.json();
+        const data = await response.json() as FileMetadata;
         console.log(`File metadata received:`, data);
         
         // Check if this is a new version
@@ -196,13 +199,8 @@ export default function Download({
   // Prepare platform data with download URL
   const selectedPlatformData = {
     ...platforms.find(p => p.id === selectedPlatform) || platforms[0],
-    downloadUrl: fileMetadata ? 
-      // Use public URL if available, otherwise fall back to API route
-      (process.env.NEXT_PUBLIC_R2_PUBLIC_URL ? 
-        `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${encodeURIComponent(fileMetadata.key)}` : 
-        `/api/download?key=${encodeURIComponent(fileMetadata.key)}`) : 
-      '#',
-    size: fileMetadata?.size || formatFileSize(98311502), // 98.31 MB
+    downloadUrl: fileMetadata ? `/api/download?key=${encodeURIComponent(fileMetadata.key)}` : '#',
+    size: fileMetadata ? formatFileSize(fileMetadata.sizeBytes) : formatFileSize(0),
   };
   
   // Prepare version info
@@ -251,11 +249,11 @@ export default function Download({
     if (!isClient || !fileMetadata) return;
     
     // Log file size information for debugging
-    console.log(`File size from API: ${fileMetadata.size}`);
+    console.log(`File size from API (bytes): ${fileMetadata.sizeBytes}`);
     
     // If the file size is different from what's displayed, update it
-    if (selectedPlatformData.size !== fileMetadata.size) {
-      console.log(`Updating file size from ${selectedPlatformData.size} to ${fileMetadata.size}`);
+    if (selectedPlatformData.size !== formatFileSize(fileMetadata.sizeBytes)) {
+      console.log(`Updating file size display to ${formatFileSize(fileMetadata.sizeBytes)}`);
     }
   }, [fileMetadata, isClient, selectedPlatformData.size]);
   

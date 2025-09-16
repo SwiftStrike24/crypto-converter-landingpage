@@ -122,19 +122,10 @@ export async function getFileMetadata(prefix: string) {
 
 /**
  * Generate a URL for downloading a file
- * @param key The object key in the R2 bucket
- * @returns URL for downloading the file
+ * Always route through API to enforce Range support and headers
  */
 export async function getDownloadUrl(key: string) {
   try {
-    // Always use the public URL if available
-    if (process.env.R2_PUBLIC_URL) {
-      // For direct downloads from R2 public bucket
-      return `${process.env.R2_PUBLIC_URL}/${encodeURIComponent(key)}`;
-    }
-    
-    // Fallback to API route if public URL is not configured
-    // This will proxy the download through the Next.js API
     return `/api/download?key=${encodeURIComponent(key)}`;
   } catch (error) {
     console.error('Error generating download URL:', error);

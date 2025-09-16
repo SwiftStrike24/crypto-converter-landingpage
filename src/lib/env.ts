@@ -3,13 +3,11 @@
  * Ensures all required environment variables are properly set
  */
 
-// Required environment variables for R2
+// Required environment variables for R2 (server-only)
 const requiredR2Vars = [
   'CLOUDFLARE_ACCOUNT_ID',
   'R2_ACCESS_KEY_ID',
   'R2_SECRET_ACCESS_KEY',
-  'R2_ENDPOINT',
-  'R2_PUBLIC_URL',
 ];
 
 /**
@@ -20,21 +18,20 @@ export function validateEnv() {
   const missingVars: string[] = [];
   const invalidVars: string[] = [];
   
-  // Check R2 variables
+  // Check required R2 variables
   requiredR2Vars.forEach(varName => {
     if (!process.env[varName]) {
       missingVars.push(varName);
-    } else if (varName === 'R2_ENDPOINT' && 
-              !process.env[varName]?.includes('cloudflarestorage.com') && 
-              !process.env[varName]?.includes('r2.cloudflarestorage.com')) {
-      invalidVars.push(`${varName} (should contain cloudflarestorage.com)`);
-    } else if (varName === 'R2_PUBLIC_URL' && 
-              !process.env[varName]?.includes('r2.dev') && 
-              !process.env[varName]?.includes('pub-')) {
-      invalidVars.push(`${varName} (should contain r2.dev)`);
     }
   });
-  
+
+  // Optional vars hints/warnings (do not invalidate)
+  if (process.env.R2_ENDPOINT &&
+      !process.env.R2_ENDPOINT.includes('cloudflarestorage.com') &&
+      !process.env.R2_ENDPOINT.includes('r2.cloudflarestorage.com')) {
+    invalidVars.push(`R2_ENDPOINT (should contain cloudflarestorage.com)`);
+  }
+
   return {
     isValid: missingVars.length === 0 && invalidVars.length === 0,
     missingVars,
@@ -67,7 +64,9 @@ export function logEnvValidation() {
   } else {
     console.log('✅ All required environment variables are set and valid.');
     console.log(`- Using R2 bucket: cryptoconverter-downloads`);
-    console.log(`- R2 endpoint: ${process.env.R2_ENDPOINT}`);
+    if (process.env.R2_ENDPOINT) {
+      console.log(`- R2 endpoint: ${process.env.R2_ENDPOINT}`);
+    }
   }
   
   return isValid;

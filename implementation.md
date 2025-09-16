@@ -92,10 +92,11 @@ The main landing page (`src/app/page.tsx`) is composed of several modular sectio
 
 -   **Objective:** Provide a platform-specific download link for the application.
 -   **Key Features:**
-    -   **Dynamic File Fetching:** Connects to the `/api/files` backend endpoint to get metadata for the latest application installer from Cloudflare R2.
+    -   **Accurate R2 Metadata:** Connects to the `/api/files` backend endpoint to get metadata for the latest application installer from Cloudflare R2. The endpoint performs a `HEAD` on the selected object to return the authoritative `Content-Length` (as `sizeBytes`), `ETag`, and optional `sha256` from object metadata.
     -   **Platform Selector:** Allows users to select their operating system (currently Windows, with macOS as "Coming Soon").
     -   **Robust Error Handling:** If the API fails to fetch file data, it displays a user-friendly error message and a retry button.
     -   **Automatic Updates:** Periodically re-fetches metadata to check for new versions and displays a "New!" badge if a new version is detected.
+    -   **Download Pipeline:** Uses the unified `/api/download?key=...` route for all downloads to ensure Range support and consistent headers. The browser manages resume via native Range requests.
     -   **Embedded Demo:** Includes another instance of the `ConverterDemo` for user engagement.
     -   **Dual Particle System:** Renders two instances of the `ParticleWave` component. An `ambient` green galaxy effect is active when scrolling into the section, and a `travel` effect creates a star-streaking transition when scrolling out of the section.
     -   **3D Scroll Animation:** Implements consistent entry (zoom-in from previous section) and exit (zoom-out) animations using `useTransform` hooks based on scroll progress, maintaining the seamless 3D-like transition effect throughout the page.
@@ -152,20 +153,32 @@ The landing page implements a comprehensive, consistent 3D-like scrolling experi
 -   **Purpose:** Fetches metadata for the latest available application installer from Cloudflare R2.
 -   **Logic:**
     1.  Receives a `platform` query parameter (`windows` or `mac`).
-    2.  Lists objects in the `cryptovertx-downloads` R2 bucket under the `latest/` prefix.
-    3.  Filters the list to find the correct installer file based on keywords ("Setup", "Installer") and file extensions (`.msi`, `.exe`).
-    4.  Sorts the results by modification date to find the newest file.
-    5.  Extracts version, size, and release date.
-    6.  Returns the metadata as a JSON response.
-    7.  Returns fallback data if an error occurs or no file is found.
+    2.  Lists objects in the R2 bucket under the `latest/` prefix.
+    3.  Filters to the correct installer file based on keywords (e.g., `Setup`/`Installer`) and file extensions (`.msi`/`.exe` for Windows, `.dmg`/`.pkg` for macOS).
+    4.  Performs a `HEAD` on the selected object to retrieve authoritative metadata: `Content-Length` (returned as `sizeBytes`), `ETag`, optional `Metadata.sha256`.
+    5.  Extracts version from the filename and formats the release date from `LastModified`.
+    6.  Returns JSON: `{ key, filename, sizeBytes, size, version, releaseDate, etag, sha256 }` with `Cache-Control: no-store`.
+    7.  Returns an error with appropriate status code if no file is found or R2 fails; no guessed sizes are used.
 
 ### 5.2. `/api/download`
 
--   **Purpose:** Securely streams a file from R2 to the user.
--   **Logic:**
-    1.  Receives a `key` query parameter corresponding to the R2 object key.
-    2.  Uses the AWS SDK to fetch the object from R2.
-    3.  Streams the file body directly in the `NextResponse` with appropriate `Content-Disposition` headers to trigger a browser download.
+-   **Purpose:** Streams files directly from R2 with full HTTP Range support for reliable, resumable downloads.
+-   **Behavior:**
+    -   Always streams via the API route (no presigned URLs are exposed to the client), ensuring consistent headers and telemetry.
+    -   If the request includes a `Range` header, the route:
+        -   Sends `GetObject` with the same `Range` to R2
+        -   Returns `206 Partial Content` with `Content-Range` and `Content-Length` equal to the segment size
+    -   If there is no `Range` header, the route returns `200 OK` with the full `Content-Length`.
+-   **Headers:**
+    -   `Accept-Ranges: bytes`
+    -   `Cache-Control: no-store`
+    -   `Content-Type: application/x-msi` for MSI files (fallback to R2-provided content type or `application/octet-stream`)
+    -   `Content-Disposition: attachment; filename="<actual file name>"`
+    -   `ETag` passthrough if provided by R2
+-   **Errors:**
+    -   Invalid ranges return `416 Range Not Satisfiable` with `Content-Range: bytes */<total>`
+    -   Unauthorized returns `401`
+-   **Telemetry:** Logs include request host, requested range, resulting status, `Content-Length`, `Content-Range`, and `ETag`.
 
 ## 6. Styling & Animations
 
